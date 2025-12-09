@@ -9,7 +9,7 @@ class MainScene extends Phaser.Scene {
     this.player = null;
     this.cursors = null;
     this.wasdKeys = null;
-    this.spaceKey = null;
+    this.eKey = null;
     this.xKey = null;
     this.zKey = null;
     this.resetKeys = null;
@@ -344,28 +344,63 @@ class MainScene extends Phaser.Scene {
   }
 
   setupControls() {
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.wasdKeys = this.input.keyboard.addKeys({ W: 87, A: 65, S: 83, D: 68 });
-    this.spaceKey = this.input.keyboard.addKey(32);
-    this.xKey = this.input.keyboard.addKey(88); // X key
-    this.zKey = this.input.keyboard.addKey(90); // Z key
-    this.resetKeys = this.input.keyboard.addKeys({ R: 82, H: 72 });
+    // Since Phaser keyboard is disabled, we'll use window keyboard events
+    this.keysPressed = {};
+    this.keysPressedLastFrame = {};
+    
+    window.addEventListener('keydown', (e) => {
+      // Check if an input field is focused
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+      
+      // Only track game keys if not typing
+      if (!isInputFocused) {
+        if (!this.keysPressed[e.code]) {
+          this.keysPressed[e.code] = true;
+        }
+        // Prevent default browser behavior for game keys
+        if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE', 'KeyX', 'KeyZ', 'KeyR', 'KeyH', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+          e.preventDefault();
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      this.keysPressed[e.code] = false;
+    });
+  }
+
+  isKeyJustPressed(code) {
+    return this.keysPressed[code] && !this.keysPressedLastFrame[code];
   }
 
   update() {
-    if (!this.player || !this.cursors) return;
+    if (!this.player) return;
 
-    if (this.resetKeys.R.isDown && this.resetKeys.H.isDown) {
+    // Check if an input field is focused - if so, skip keyboard game controls
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+    
+    if (isInputFocused) {
+      // Don't process game keyboard input when typing
+      this.player.setVelocity(0, 0);
+      return;
+    }
+
+    // R + H to reset position
+    if (this.keysPressed['KeyR'] && this.keysPressed['KeyH']) {
         this.player.setPosition(this.spawnX || 100, this.spawnY || 300);
         this.player.setVelocity(0, 0);
         return;
     }
 
     let vx = 0; let vy = 0; const speed = 150;
-    if (this.cursors.left.isDown || this.wasdKeys.A.isDown) vx = -speed;
-    if (this.cursors.right.isDown || this.wasdKeys.D.isDown) vx = speed;
-    if (this.cursors.up.isDown || this.wasdKeys.W.isDown) vy = -speed;
-    if (this.cursors.down.isDown || this.wasdKeys.S.isDown) vy = speed;
+    
+    // Check arrow keys and WASD keys
+    if (this.keysPressed['ArrowLeft'] || this.keysPressed['KeyA']) vx = -speed;
+    if (this.keysPressed['ArrowRight'] || this.keysPressed['KeyD']) vx = speed;
+    if (this.keysPressed['ArrowUp'] || this.keysPressed['KeyW']) vy = -speed;
+    if (this.keysPressed['ArrowDown'] || this.keysPressed['KeyS']) vy = speed;
     
     if (vx !== 0 && vy !== 0) { vx *= 0.7071; vy *= 0.7071; }
     this.player.setVelocity(vx, vy);
@@ -398,25 +433,28 @@ class MainScene extends Phaser.Scene {
     // Update hover text
     if (nearestData && nearestTarget) {
         this.interactText.setVisible(true);
-        this.interactText.setText(`Press SPACE to interact with ${nearestData.name}`);
+        this.interactText.setText(`Press E to interact with ${nearestData.name}`);
         this.currentHoveredObject = nearestData;
     } else {
         this.interactText.setVisible(false);
         this.currentHoveredObject = null;
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.handleInteraction();
+    if (this.isKeyJustPressed('KeyE')) this.handleInteraction();
     
     // Handle whiteboard page navigation
     if (this.whiteboardOpen) {
-      if (Phaser.Input.Keyboard.JustDown(this.xKey)) {
+      if (this.isKeyJustPressed('KeyX')) {
         this.closeWhiteboard();
       }
-      if (Phaser.Input.Keyboard.JustDown(this.zKey)) {
+      if (this.isKeyJustPressed('KeyZ')) {
         this.whiteboardPage = (this.whiteboardPage + 1) % 2;
         this.showWhiteboardPage();
       }
     }
+
+    // Update keysPressedLastFrame for next frame
+    this.keysPressedLastFrame = { ...this.keysPressed };
   }
 
   showWhiteboardPage() {

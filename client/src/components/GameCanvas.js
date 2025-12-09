@@ -23,6 +23,9 @@ function GameCanvas() {
           debug: false
         }
       },
+      input: {
+        keyboard: false  // Disable Phaser's keyboard manager completely
+      },
       scene: [MainScene]
     };
 

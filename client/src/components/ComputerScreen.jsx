@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './ComputerScreen.css';
-import { getAllEmails } from '../data/emailData.js';
+import { getRandomizedEmails } from '../data/emailData.js';
 
 const ComputerScreen = ({ isOpen, onClose }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -24,7 +24,7 @@ const ComputerScreen = ({ isOpen, onClose }) => {
     }
   };
 
-  const [emails, setEmails] = useState(() => getAllEmails());
+  const [emails, setEmails] = useState(() => getRandomizedEmails());
 
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [score, setScore] = useState(0);
@@ -35,6 +35,45 @@ const ComputerScreen = ({ isOpen, onClose }) => {
   const [showFlash, setShowFlash] = useState(false);
   const [dialogue, setDialogue] = useState(null); // 💬 Dialogue box state
   const sidebarRef = React.useRef(null);
+
+  // Disable Phaser keyboard input when typing in input fields
+  useEffect(() => {
+    const handleInputFocus = () => {
+      const scenes = window.__PHASER_SCENES;
+      if (scenes) {
+        scenes.forEach(scene => {
+          if (scene && scene.input && scene.input.keyboard) {
+            scene.input.keyboard.enabled = false;
+          }
+        });
+      }
+    };
+
+    const handleInputBlur = () => {
+      const scenes = window.__PHASER_SCENES;
+      if (scenes) {
+        scenes.forEach(scene => {
+          if (scene && scene.input && scene.input.keyboard) {
+            scene.input.keyboard.enabled = true;
+          }
+        });
+      }
+    };
+
+    // Add listeners to all input fields
+    const inputs = document.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+      input.addEventListener('focus', handleInputFocus);
+      input.addEventListener('blur', handleInputBlur);
+    });
+
+    return () => {
+      inputs.forEach(input => {
+        input.removeEventListener('focus', handleInputFocus);
+        input.removeEventListener('blur', handleInputBlur);
+      });
+    };
+  }, []);
 
   // Disable Phaser keyboard input when ComputerScreen modal is open
   useEffect(() => {
@@ -373,11 +412,11 @@ const ComputerScreen = ({ isOpen, onClose }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="computer-overlay" onClick={onClose}>
-      <div className="computer-monitor" onClick={(e) => e.stopPropagation()}>
+    <>
+      {isOpen && (
+        <div className="computer-overlay" onClick={onClose}>
+          <div className="computer-monitor" onClick={(e) => e.stopPropagation()}>
         {/* CRT Screen Bezel */}
         <div className="screen-bezel">
           <div className="screen-content">
@@ -560,35 +599,56 @@ const ComputerScreen = ({ isOpen, onClose }) => {
 
         {/* Close Button */}
         <button className="screen-close" onClick={onClose} title="Close (ESC)">×</button>
-      </div>
-
-      {/* 💬 Dialogue Box at Bottom */}
-      {dialogue && (
-        <div className="dialogue-box-container">
-          <div className="dialogue-box">
-            <div className="dialogue-header">
-              <strong>{dialogue.name}</strong>
-              <button 
-                className="dialogue-close" 
-                onClick={() => setDialogue(null)}
-                title="Close (ESC or X)"
-              >×</button>
-            </div>
-            <div className="dialogue-text">
-              {dialogue.text.split('\n').map((line, idx) => (
-                <div key={idx}>{line}</div>
-              ))}
-            </div>
-            {dialogue.isWhiteboard && (
-              <div style={{ marginTop: '12px', fontSize: '12px', color: '#00d4ff', fontStyle: 'italic', textAlign: 'center' }}>
-                Press X to close | Press Z for next page
-              </div>
-            )}
           </div>
         </div>
       )}
-      </div>
-    </div>
+
+      {/* 💬 Dialogue Box or Whiteboard Screen */}
+      {dialogue && (
+        dialogue.isWhiteboard ? (
+          // Full-screen whiteboard
+          <div className="whiteboard-overlay" onClick={() => {}}>
+            <div className="whiteboard-screen">
+              <div className="whiteboard-header">
+                <h2>{dialogue.name}</h2>
+                <button 
+                  className="whiteboard-close" 
+                  onClick={() => setDialogue(null)}
+                  title="Close (X)"
+                >×</button>
+              </div>
+              <div className="whiteboard-content">
+                {dialogue.text.split('\n').map((line, idx) => (
+                  <div key={idx} className="whiteboard-line">{line}</div>
+                ))}
+              </div>
+              <div className="whiteboard-footer">
+                Press X to close | Press Z for next page
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Regular dialogue box at bottom
+          <div className="dialogue-box-container">
+            <div className="dialogue-box">
+              <div className="dialogue-header">
+                <strong>{dialogue.name}</strong>
+                <button 
+                  className="dialogue-close" 
+                  onClick={() => setDialogue(null)}
+                  title="Close (ESC or X)"
+                >×</button>
+              </div>
+              <div className="dialogue-text">
+                {dialogue.text.split('\n').map((line, idx) => (
+                  <div key={idx}>{line}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      )}
+    </>
   );
 };
 
