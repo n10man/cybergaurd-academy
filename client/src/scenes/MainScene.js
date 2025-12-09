@@ -538,6 +538,11 @@ class MainScene extends Phaser.Scene {
 
   // 🎮 Check if an interaction is allowed based on current game progression
   isInteractionAllowed(interactionName) {
+    // Bookshelves are always interactable regardless of progression
+    if (interactionName === 'Bookshelves') {
+      return true;
+    }
+
     const progress = this.gameProgress;
     
     // At the start, only HR manager is interactable
@@ -557,7 +562,7 @@ class MainScene extends Phaser.Scene {
     
     // After Senior Dev, all NPCs and objects become interactable
     if (progress === 'senior_dev') {
-      return ['Bookshelves', 'note', 'whiteboard', 'NPC#1 HR manager', 'NPC#3 The Senior Dev'].includes(interactionName);
+      return ['note', 'whiteboard', 'NPC#1 HR manager', 'NPC#3 The Senior Dev'].includes(interactionName);
     }
     
     // After note interaction, main computer becomes interactable
