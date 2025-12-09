@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 // 🎛️ MASTER SWITCH: Change this to 'office' or 'server_room' to switch maps!
-const CURRENT_LEVEL = 'server_room'; 
+const CURRENT_LEVEL = 'office'; 
 
 class MainScene extends Phaser.Scene {
   constructor() {
@@ -134,8 +134,8 @@ class MainScene extends Phaser.Scene {
     this.collisionsLayer = this.map.createLayer('collisions', allTilesets, 0, 0);
     
     if (this.collisionsLayer) {
-        // VISIBLE FOR DEBUGGING
-        this.collisionsLayer.setVisible(true); 
+        // HIDDEN - No orange collision highlights
+        this.collisionsLayer.setVisible(false); 
         this.collisionsLayer.setDepth(100);
         
         // BRUTE FORCE COLLISION
@@ -146,16 +146,16 @@ class MainScene extends Phaser.Scene {
 
     this.createPlayerAndCamera();
     this.setupInteractions();
+    this.drawHitboxes(); // 🎨 Draw green hitboxes after interactions are created
     this.setupControls();
 
-    // 5. Debug Graphics
-    this.physics.world.createDebugGraphic();
+    // 5. Debug Graphics - HIDDEN (no visual collision display)
     const graphics = this.add.graphics().setAlpha(0.75).setDepth(200);
     if (this.collisionsLayer) {
         this.collisionsLayer.renderDebug(graphics, {
             tileColor: null, 
-            collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), 
-            faceColor: new Phaser.Display.Color(40, 39, 37, 255) 
+            collidingTileColor: null,
+            faceColor: null
         });
     }
   }
@@ -176,7 +176,9 @@ class MainScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(startX, startY, 'player');
     this.player.setDepth(10);
     this.player.setCollideWorldBounds(true);
-    this.player.setScale(0.5); 
+    this.player.setScale(0.5);
+    this.player.body.setDrag(0.99); // Add friction
+    this.player.body.setMaxSpeed(300); // Cap speed
     
     const width = this.player.width;
     const height = this.player.height;
@@ -193,29 +195,124 @@ class MainScene extends Phaser.Scene {
   }
 
   setupInteractions() {
-    if (this.map.objects) {
-        this.map.objects.forEach(layer => {
-            if (layer.name.toLowerCase().includes('npc')) {
-                layer.objects.forEach(obj => this.createSmartNPC(obj.x, obj.y, layer.name, obj));
-            }
-        });
-    }
+    this.interactions = [];
     
-    const interactionsLayer = this.map.objects ? this.map.objects.find(o => o.name === 'Interactions') : null;
-    if (interactionsLayer) {
-        interactionsLayer.objects.forEach(obj => {
-            const zoneX = obj.x + (obj.width / 2);
-            const zoneY = obj.y + (obj.height / 2);
-            const zone = this.add.zone(zoneX, zoneY, obj.width, obj.height);
-            this.physics.world.enable(zone);
-            zone.body.setAllowGravity(false);
-            zone.body.setMoves(false);
-            this.interactions.push({ zone: zone, name: obj.name, data: obj });
-        });
-    }
+    console.log('🔍 Reading interactables from Tiled map object layers');
+    
+    // Layer names to read from Tiled
+    const layerNames = [
+      'main computer',
+      'Bookshelves',
+      'note',
+      'whiteboard',
+      'NPC#1 HR manager',
+      'NPC#3 The Senior Dev'
+    ];
 
-    this.interactText = this.add.text(0, 0, 'Press SPACE', { fontSize: '12px', backgroundColor: '#000', color: '#fff' });
-    this.interactText.setDepth(100).setOrigin(0.5, 1.5).setVisible(false);
+    // Read directly from Tiled object layers
+    layerNames.forEach(layerName => {
+      const objectLayer = this.map.getObjectLayer(layerName);
+      
+      if (objectLayer && objectLayer.objects && objectLayer.objects.length > 0) {
+        objectLayer.objects.forEach(obj => {
+          // Position zone at object center
+          const zoneX = obj.x + obj.width / 2;
+          const zoneY = obj.y + obj.height / 2;
+          
+          const zone = this.add.zone(zoneX, zoneY, obj.width, obj.height);
+          this.physics.world.enable(zone);
+          zone.body.setAllowGravity(false);
+          
+          // Store all relevant data
+          const interactionData = {
+            zone: zone,
+            name: layerName,
+            x: obj.x,
+            y: obj.y,
+            width: obj.width,
+            height: obj.height,
+            properties: {}
+          };
+          
+          // Extract properties from object
+          if (obj.properties && Array.isArray(obj.properties)) {
+            obj.properties.forEach(prop => {
+              interactionData.properties[prop.name] = prop.value;
+            });
+          }
+          
+          // Extract layer properties as fallback (properties might be an object, not array)
+          if (objectLayer.properties && Array.isArray(objectLayer.properties)) {
+            objectLayer.properties.forEach(prop => {
+              if (!interactionData.properties[prop.name]) {
+                interactionData.properties[prop.name] = prop.value;
+              }
+            });
+          }
+          
+          this.interactions.push(interactionData);
+          
+          console.log(`✓ ${layerName} at (${zoneX.toFixed(1)}, ${zoneY.toFixed(1)}) - Size: ${obj.width.toFixed(1)}x${obj.height.toFixed(1)}`);
+        });
+      } else {
+        console.warn(`⚠️ Layer "${layerName}" not found or has no objects`);
+      }
+    });
+
+    console.log(`✅ Total interactable zones: ${this.interactions.length}`);
+
+    // Create the interaction hover text with animation
+    this.interactText = this.add.text(this.cameras.main.centerX, 30, '', {
+        fontSize: '16px',
+        backgroundColor: '#000000',
+        color: '#00FF00',
+        padding: { x: 10, y: 5 },
+        align: 'center',
+        fontStyle: 'bold'
+    });
+    this.interactText.setDepth(9999);
+    this.interactText.setOrigin(0.5, 0);
+    this.interactText.setVisible(false);
+    this.interactText.setScrollFactor(0, 0); // Fixed to camera
+    
+    // Add floating animation
+    this.tweens.add({
+        targets: this.interactText,
+        y: { from: 30, to: 35 },
+        duration: 800,
+        ease: 'Sine.inOut',
+        loop: -1,
+        yoyo: true
+    });
+    
+    this.currentHoveredObject = null;
+  }
+
+  drawHitboxes() {
+    // Draw green rectangles for all interactable zones
+    const graphics = this.add.graphics();
+    graphics.lineStyle(3, 0x00ff00, 0.7); // Green color, 3px width, 70% opacity
+    graphics.setDepth(1000); // Above most objects but below UI
+    
+    this.interactions.forEach((item) => {
+      // Draw rectangle at the zone position
+      const x = item.x;
+      const y = item.y;
+      const width = item.width;
+      const height = item.height;
+      
+      graphics.strokeRect(x, y, width, height);
+      
+      // Optional: Draw a small label at the top
+      const text = this.add.text(x + width/2, y - 10, item.name, {
+        fontSize: '12px',
+        color: '#00FF00',
+        backgroundColor: '#000000',
+        padding: { x: 4, y: 2 }
+      });
+      text.setOrigin(0.5, 1);
+      text.setDepth(1001);
+    });
   }
 
   createSmartNPC(x, y, name, data) {
@@ -260,47 +357,66 @@ class MainScene extends Phaser.Scene {
     if (vx !== 0 && vy !== 0) { vx *= 0.7071; vy *= 0.7071; }
     this.player.setVelocity(vx, vy);
 
-    const interactionRadius = 40;
+    // Check for nearby interactable objects
+    const interactionRadius = 80;
     let nearestTarget = null;
-    this.npcs.forEach((npc) => {
-      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.sprite.x, npc.sprite.y) < this.interactionRadius) nearestTarget = npc.sprite;
+    let nearestData = null;
+
+    // Check interaction zones
+    this.interactions.forEach((item) => {
+        const distance = Phaser.Math.Distance.Between(
+            this.player.x, this.player.y,
+            item.zone.x, item.zone.y
+        );
+        
+        if (distance < interactionRadius) {
+            if (!nearestTarget || distance < nearestTarget.distance) {
+                nearestTarget = { zone: item.zone, distance: distance };
+                nearestData = item;
+            }
+        }
     });
-    if (!nearestTarget) {
-        this.interactions.forEach((item) => {
-            if (Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), item.zone.getBounds())) nearestTarget = item.zone;
-        });
-    }
     
-    if (nearestTarget) {
+    // Update hover text
+    if (nearestData && nearestTarget) {
         this.interactText.setVisible(true);
-        this.interactText.setPosition(this.player.x, this.player.y - 20);
+        this.interactText.setText(`Press SPACE to interact with ${nearestData.name}`);
+        this.currentHoveredObject = nearestData;
     } else {
         this.interactText.setVisible(false);
+        this.currentHoveredObject = null;
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.handleInteraction();
   }
 
   handleInteraction() {
-    let interactionFound = false;
-    this.npcs.forEach((npc) => {
-      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.sprite.x, npc.sprite.y) < this.interactionRadius) {
-        const messageProp = npc.data.properties ? npc.data.properties.find(p => p.name.toLowerCase().includes('message')) : null;
-        window.dispatchEvent(new CustomEvent('showDialogue', { detail: { name: npc.name, text: messageProp ? messageProp.value : "Hello!" } }));
-        interactionFound = true;
-      }
-    });
-    if (interactionFound) return;
+    if (!this.currentHoveredObject) return;
 
-    this.interactions.forEach((item) => {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), item.zone.getBounds())) {
-             const props = item.data.properties || [];
-             const moduleProp = props.find(p => p.name === 'module');
-             const clueProp = props.find(p => p.name === 'text' || p.name === 'clue');
-             if (moduleProp) window.dispatchEvent(new CustomEvent('openModule', { detail: { module: moduleProp.value } }));
-             else if (clueProp) window.dispatchEvent(new CustomEvent('showDialogue', { detail: { name: "System", text: clueProp.value } }));
-        }
-    });
+    const item = this.currentHoveredObject;
+    const props = item.properties || {};
+    
+    // Dispatch event for ComputerScreen to handle
+    if (props.module) {
+      window.dispatchEvent(new CustomEvent('openModule', { detail: { module: props.module } }));
+    } else if (props.dialogue || props.message1) {
+      const dialogueText = props.dialogue || props.message1;
+      window.dispatchEvent(new CustomEvent('showDialogue', { 
+        detail: { 
+          name: item.name, 
+          text: dialogueText 
+        } 
+      }));
+    } else if (props.clue) {
+      window.dispatchEvent(new CustomEvent('showDialogue', { 
+        detail: { 
+          name: item.name, 
+          text: props.clue 
+        } 
+      }));
+    } else {
+      console.log(`Interacted with: ${item.name}`, props);
+    }
   }
 }
 

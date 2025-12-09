@@ -1,0 +1,129 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🎮 HITBOX VISUALIZATION ENABLED 🎮                          ║
+║                                                                                ║
+║  Status: ✅ ALL 6 INTERACTABLES NOW SHOW GREEN HITBOXES                        ║
+║  Location: http://localhost:3000                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📍 YOUR 6 INTERACTABLE OBJECTS (From Tiled):
+
+  1️⃣  main computer
+      Position: X=256, Y=36 (center)
+      Size: 156×80 pixels
+      Purpose: Opens email classification module
+      
+  2️⃣  Bookshelves  
+      Position: X=432, Y=47 (center)
+      Size: 165×59 pixels
+      Purpose: Opens phishing guide
+      
+  3️⃣  note
+      Position: X=646, Y=301 (center)
+      Size: 89×42 pixels
+      Purpose: Shows Dave's Note clue
+      
+  4️⃣  whiteboard
+      Position: X=577, Y=44 (center)
+      Size: 104×85 pixels
+      Purpose: Shows status alert clue
+      
+  5️⃣  NPC#1 HR manager
+      Position: X=181, Y=487 (center)
+      Size: 56×75 pixels
+      Purpose: HR dialogue/guidance
+      
+  6️⃣  NPC#3 The Senior Dev
+      Position: X=511, Y=488 (center)
+      Size: 69×77 pixels
+      Purpose: Senior dev dialogue/guidance
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 WHAT TO CHECK:
+
+  ✓ Open browser at http://localhost:3000
+  ✓ Look for 6 GREEN RECTANGLES on the game map
+  ✓ Move your character with WASD keys
+  ✓ Get near a green box (within 80 pixels)
+  ✓ You should see: "Press SPACE to interact with [object name]"
+  ✓ Press SPACE to test interaction
+  ✓ Open browser console (F12) to see debug messages
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 HOW IT WORKS:
+
+  Before: Hardcoded positions (might not match Tiled)
+  Now:    Reading DIRECTLY from your Tiled map JSON
+  
+  The code now:
+  → Opens first_map.json
+  → Looks for object layers with these names:
+    • main computer
+    • Bookshelves
+    • note
+    • whiteboard
+    • NPC#1 HR manager
+    • NPC#3 The Senior Dev
+  → Extracts exact X, Y, width, height from each
+  → Creates physics zones at those positions
+  → Draws them GREEN for debugging
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  IF HITBOXES DON'T SHOW:
+
+  Possible Causes:
+  1. Layer names in Tiled don't match exactly (case-sensitive!)
+  2. Browser cache - try Ctrl+Shift+R (hard refresh)
+  3. npm didn't recompile - check terminal for "Compiled successfully"
+  
+  Troubleshooting:
+  • Press F12 to open browser console
+  • Look for error messages (red text)
+  • Check if it says:
+    ✅ "Total interactable zones: 6" = Good!
+    ⚠️  "Layer not found" = Name mismatch in Tiled
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 CONSOLE OUTPUT YOU SHOULD SEE:
+
+  🔍 Reading interactables from Tiled map object layers
+  ✓ main computer at (256.0, 36.0) - Size: 156.0x80.0
+  ✓ Bookshelves at (432.3, 47.3) - Size: 164.7x58.7
+  ✓ note at (645.7, 301.0) - Size: 88.7x42.0
+  ✓ whiteboard at (577.2, 43.5) - Size: 103.7x85.0
+  ✓ NPC#1 HR manager at (181.3, 486.7) - Size: 56.0x74.7
+  ✓ NPC#3 The Senior Dev at (511.2, 488.3) - Size: 69.0x77.3
+  ✅ Total interactable zones: 6
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 VISUAL REPRESENTATION:
+
+  Office Map (Bird's Eye View):
+  
+    ┌──────────────────────────────────────────────────┐
+    │ 🟩 Whiteboard         🟩 Computer (top-left)    │
+    │        🟩 Bookshelves       ↓                    │
+    │                            ↓                    │
+    │            ↓                                     │
+    │    🟩 Note                                 🟩    │
+    │                                            │    │
+    │                                            ↓    │
+    │  🟩 HR Manager      🟩 Senior Dev       🟩      │
+    │                                                  │
+    └──────────────────────────────────────────────────┘
+    
+    🟩 = Green hitbox (what you should see!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 READY TO TEST? 
+
+  1. Check http://localhost:3000
+  2. Look for the 6 green boxes
+  3. Tell me what you see!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

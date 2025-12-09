@@ -48,7 +48,7 @@
          "name":"Top half of map floor",
          "opacity":1,
          "type":"tilelayer",
-         "visible":false,
+         "visible":true,
          "width":50,
          "x":0,
          "y":0
@@ -892,8 +892,8 @@
             12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
             12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
             12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
-            12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
-            12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
+            12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
+            12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
             12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109, 2684367109,
             12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109,
             12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 0, 0, 0, 0, 0, 0, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 12549, 2684367109, 2684367109, 2684367109,
@@ -914,6 +914,7 @@
             2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109, 2684367109],
          "height":40,
          "id":31,
+         "locked":true,
          "name":"collisions",
          "opacity":0.5,
          "type":"tilelayer",
@@ -924,18 +925,52 @@
         }, 
         {
          "draworder":"topdown",
+         "id":33,
+         "name":"main computer",
+         "objects":[
+                {
+                 "height":80,
+                 "id":22,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"module",
+                         "type":"string",
+                         "value":"phishing_test"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":156,
+                 "x":178,
+                 "y":-4
+                }],
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"message",
+                 "type":"string",
+                 "value":"main task"
+                }],
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":28,
          "name":"Bookshelves",
          "objects":[
                 {
-                 "height":82.6667,
+                 "height":58.6667,
                  "id":17,
                  "name":"",
                  "properties":[
                         {
-                         "name":"clue",
+                         "name":"module",
                          "type":"string",
-                         "value":"Phishing Manual: 1. Check the Sender. 2. Hover over links. 3. Don't panic!"
+                         "value":"phishing_guide"
                         }],
                  "rotation":0,
                  "type":"",
@@ -945,6 +980,12 @@
                  "y":18
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"module",
+                 "type":"string",
+                 "value":"phishing"
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,
@@ -953,7 +994,7 @@
         {
          "draworder":"topdown",
          "id":29,
-         "name":"senior dev note",
+         "name":"note",
          "objects":[
                 {
                  "height":42,
@@ -963,16 +1004,22 @@
                         {
                          "name":"clue",
                          "type":"string",
-                         "value":"Senior Dev's Scribbles: 'To bypass the login, I just use OR 1=1. It's totally safe, trust me.'"
+                         "value":"Dave's Note: \"Remember: Check the sender domain (@techcorp.com) and hover over links before clicking!\""
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":79.6667,
-                 "x":610.333,
+                 "width":88.6667,
+                 "x":601.333,
                  "y":280
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"message",
+                 "type":"string",
+                 "value":"login information"
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,
@@ -991,7 +1038,7 @@
                         {
                          "name":"clue",
                          "type":"string",
-                         "value":"WEEKLY GOAL: 0 Days since last security breach. Please stop clicking random links."
+                         "value":"STATUS ALERT: Massive phishing campaign detected. IT Dept is overwhelmed. Please verify all emails manually."
                         }],
                  "rotation":0,
                  "type":"",
@@ -1039,6 +1086,22 @@
                  "y":517
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"spawnX",
+                 "type":"int",
+                 "value":100
+                }, 
+                {
+                 "name":"spawnY",
+                 "type":"int",
+                 "value":300
+                }, 
+                {
+                 "name":"targetScene",
+                 "type":"string",
+                 "value":"ServerRoomScene"
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,
@@ -1074,38 +1137,20 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"Message",
+                 "name":"message1",
                  "type":"string",
-                 "value":"Hello there"
-                }],
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":24,
-         "name":"NPC#2 The Anxious Analyst",
-         "objects":[
+                 "value":"Hello there, welcome to your first day of the job, here at this job you will be working with email phishing, SQL injections and other related cyber security attacks which require you to defend against. You may head to the whiteboard at the top of the office or ask the senior dev on the right side of the office for any further help or assistance"
+                }, 
                 {
-                 "height":82.6667,
-                 "id":9,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"Message",
-                         "type":"string",
-                         "value":"Watch your inbox. We are getting huge amounts of phishing emails today."
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":57.3333,
-                 "x":109.333,
-                 "y":130.667
+                 "name":"message2",
+                 "type":"string",
+                 "value":"You may ask the senior dev for help, or check the whiteboard for your current progress"
+                }, 
+                {
+                 "name":"name",
+                 "type":"string",
+                 "value":"HR Manager"
                 }],
-         "opacity":1,
          "type":"objectgroup",
          "visible":true,
          "x":0,
@@ -1134,13 +1179,29 @@
                  "y":449.667
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"message1",
+                 "type":"string",
+                 "value":"Welcome! I've left a note on the table for you - check it out. It has everything you need to get started on your tasks."
+                }, 
+                {
+                 "name":"message2",
+                 "type":"string",
+                 "value":"How are the tasks going? Let me know if you need any help or have questions!"
+                }, 
+                {
+                 "name":"name",
+                 "type":"string",
+                 "value":"Senior Dev"
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
         }],
- "nextlayerid":33,
- "nextobjectid":21,
+ "nextlayerid":34,
+ "nextobjectid":24,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
