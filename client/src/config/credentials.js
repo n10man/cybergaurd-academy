@@ -37,7 +37,7 @@ export const getCredentials = () => {
 };
 
 export const setCredentials = (newCredentials) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(newCredentials));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(newCredentials));  
   console.log('Credentials updated:', newCredentials);
 };
 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { register } from '../services/api';
 import './Register.css';
 
@@ -14,7 +15,8 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  // reCAPTCHA removed for debugging - keep other form state intact
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const recaptchaRef = useRef();
 
   const handleChange = (e) => {
     setFormData({
@@ -24,21 +26,28 @@ function Register() {
     setError('');
   };
 
-  // handleCaptchaChange removed
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // CAPTCHA removed - proceed with basic validation
+    // CAPTCHA validation
+    if (!captchaToken) {
+      setError('Please complete the CAPTCHA verification');
+      return;
+    }
 
-    // Validation
-      if (formData.password !== formData.confirmPassword) {
+    // Password validation
+    if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-      if (formData.password.length < 6) {
+    if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       return;
     }
@@ -49,7 +58,8 @@ function Register() {
       const response = await register(
         formData.username,
         formData.email,
-        formData.password
+        formData.password,
+        captchaToken
       );
       
       // Registration successful - show email verification instructions
@@ -61,7 +71,9 @@ function Register() {
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
       setSuccess(false);
-      // No captcha to reset
+      // Reset captcha on error
+      recaptchaRef.current.reset();
+      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -143,11 +155,20 @@ function Register() {
               minLength={6}
             />
           </div>
-          {/* reCAPTCHA removed for debugging */}
+          
+          <div className="form-group captcha-group">
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+              onChange={handleCaptchaChange}
+              theme="dark"
+            />
+          </div>
+
           <button 
             type="submit" 
             className="submit-button" 
-            disabled={loading}
+            disabled={loading || !captchaToken}
           >
             {loading ? 'Registering...' : 'Register'}
           </button>

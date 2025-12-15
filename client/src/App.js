@@ -1,8 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
+import Setup2FA from './pages/Setup2FA';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -25,9 +27,11 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/setup-2fa" element={<Setup2FA />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route
               path="/module/:moduleType"
@@ -37,7 +41,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Dashboard />} />
           </Routes>
         </div>
       </Router>

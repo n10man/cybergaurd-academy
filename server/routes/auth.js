@@ -4,24 +4,40 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const crypto = require('crypto');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 const db = require('../config/database');
 const { registerValidator, loginValidator } = require('../middleware/validators');
 const { authLimiter, registerLimiter } = require('../middleware/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailService');
 
-// Register a new user - SIMPLIFIED FOR DEBUGGING
+// Middleware to verify JWT
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  const token = authHeader.substring(7);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Register a new user
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, captchaToken } = req.body;
     
     console.log('=== Registration Attempt ===');
     console.log('Username:', username);
     console.log('Email:', email);
-    console.log('Password received:', password ? 'Yes' : 'No');
 
     // Basic validation
     if (!username || !email || !password) {
-      console.log('Missing fields');
       return res.status(400).json({ 
         success: false, 
         message: 'Username, email, and password are required' 
@@ -29,39 +45,45 @@ router.post('/register', async (req, res) => {
     }
 
     // Hash password
-    console.log('Hashing password...');
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('Password hashed successfully');
 
-    // Insert into database
-    console.log('Inserting into database...');
-    
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Insert into database - email not verified yet
     const insertQuery = `
-      INSERT INTO users (username, email, password_hash, email_verified, created_at)
-      VALUES ($1, $2, $3, $4, NOW())
+      INSERT INTO users (username, email, password_hash, email_verified, verification_token, token_expiry, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
       RETURNING id, username, email, created_at
     `;
     
-    const result = await db.query(insertQuery, [username, email, hashedPassword, true]);
-    const user = result.rows[0];
+    const result = await db.query(insertQuery, [
+      username, 
+      email, 
+      hashedPassword, 
+      false,  // email_verified = false
+      verificationToken,
+      tokenExpiry
+    ]);
     
+    const user = result.rows[0];
     console.log('User created successfully:', user.id);
 
-    // Generate JWT token
-    console.log('Generating JWT token...');
-    const token = jwt.sign(
-  { userId: result.rows[0].id },
-  process.env.JWT_SECRET,  // Make sure this line is there
-  { expiresIn: '24h' }
-);
-    
-    console.log('Token generated successfully');
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, verificationToken, username);
+      console.log('Verification email sent to:', email);
+    } catch (emailError) {
+      console.error('Error sending verification email:', emailError);
+      // Don't fail registration if email fails, but log it
+    }
+
     console.log('=== Registration Successful ===');
 
     return res.status(201).json({
       success: true,
-      message: 'Registration successful',
-      token,
+      message: 'Registration successful. Please check your email to verify your account.',
       user: {
         id: user.id,
         username: user.username,
@@ -72,8 +94,6 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     console.error('=== Registration Error ===');
     console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Full error:', error);
     
     // Handle duplicate username/email
     if (error.code === '23505') {
@@ -169,10 +189,23 @@ router.get('/verify-email', async (req, res, next) => {
       });
     }
 
-    // Return success response
+    // Generate JWT token for auto-login
+    const loginToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Return success response with login token
     res.status(200).json({
       success: true,
-      message: 'Email verified successfully! You can now login.'
+      message: 'Email verified successfully! You are now logged in.',
+      token: loginToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
     });
   } catch (error) {
     console.error('Email verification error:', error);
@@ -295,6 +328,162 @@ router.get('/verify', async (req, res, next) => {
   } catch (error) {
     console.error('Token verification error:', error);
     next(error);
+  }
+});
+
+// Setup 2FA - Generate secret and QR code
+router.get('/setup-2fa', verifyToken, async (req, res) => {
+  try {
+    // Generate secret
+    const secret = speakeasy.generateSecret({
+      name: `CyberGuard Academy (${req.userId})`,
+      issuer: 'CyberGuard Academy',
+      length: 32
+    });
+
+    // Generate QR code
+    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+
+    // Generate backup codes
+    const backupCodes = [];
+    for (let i = 0; i < 10; i++) {
+      backupCodes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
+    }
+
+    // Store in session temporarily (don't save to DB yet - user needs to verify)
+    res.json({
+      qrCode,
+      secret: secret.base32,
+      backupCodes
+    });
+  } catch (error) {
+    console.error('Setup 2FA error:', error);
+    res.status(500).json({ error: 'Failed to setup 2FA' });
+  }
+});
+
+// Verify 2FA setup
+router.post('/verify-2fa', verifyToken, async (req, res) => {
+  try {
+    const { verificationCode, secret } = req.body;
+
+    if (!verificationCode || !secret) {
+      return res.status(400).json({ error: 'Verification code and secret required' });
+    }
+
+    // Verify the code
+    const isValid = speakeasy.totp.verify({
+      secret: secret,
+      encoding: 'base32',
+      token: verificationCode,
+      window: 2
+    });
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    // Generate backup codes
+    const backupCodes = [];
+    for (let i = 0; i < 10; i++) {
+      backupCodes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
+    }
+
+    // Save 2FA secret and backup codes to database
+    const backupCodesJson = JSON.stringify(backupCodes);
+    await db.query(
+      'UPDATE users SET two_fa_secret = $1, two_fa_backup_codes = $2, two_fa_enabled = true WHERE id = $3',
+      [secret, backupCodesJson, req.userId]
+    );
+
+    res.json({
+      message: '2FA enabled successfully',
+      backupCodes
+    });
+  } catch (error) {
+    console.error('Verify 2FA error:', error);
+    res.status(500).json({ error: 'Failed to verify 2FA' });
+  }
+});
+
+// Login with 2FA verification
+router.post('/verify-2fa-login', async (req, res) => {
+  try {
+    const { userId, verificationCode } = req.body;
+
+    if (!userId || !verificationCode) {
+      return res.status(400).json({ error: 'User ID and verification code required' });
+    }
+
+    // Get user's 2FA secret
+    const result = await db.query(
+      'SELECT id, two_fa_secret, two_fa_backup_codes FROM users WHERE id = $1 AND two_fa_enabled = true',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid user or 2FA not enabled' });
+    }
+
+    const user = result.rows[0];
+
+    // Try to verify with TOTP
+    const isValidTotp = speakeasy.totp.verify({
+      secret: user.two_fa_secret,
+      encoding: 'base32',
+      token: verificationCode,
+      window: 2
+    });
+
+    if (isValidTotp) {
+      // Valid TOTP code - generate login token
+      const token = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        message: '2FA verification successful',
+        token,
+        user: {
+          id: user.id
+        }
+      });
+    }
+
+    // Try backup codes
+    const backupCodes = JSON.parse(user.two_fa_backup_codes || '[]');
+    const codeIndex = backupCodes.indexOf(verificationCode.toUpperCase());
+
+    if (codeIndex !== -1) {
+      // Valid backup code - remove it and generate login token
+      backupCodes.splice(codeIndex, 1);
+      
+      await db.query(
+        'UPDATE users SET two_fa_backup_codes = $1 WHERE id = $2',
+        [JSON.stringify(backupCodes), userId]
+      );
+
+      const token = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        message: '2FA verification successful',
+        token,
+        user: {
+          id: user.id
+        }
+      });
+    }
+
+    res.status(401).json({ error: 'Invalid verification code' });
+  } catch (error) {
+    console.error('2FA login verification error:', error);
+    res.status(500).json({ error: 'Failed to verify 2FA' });
   }
 });
 

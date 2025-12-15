@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { verifyEmail } from '../services/api';
 import './VerifyEmail.css';
 
 function VerifyEmail() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
     const verifyEmailToken = async () => {
@@ -26,10 +28,37 @@ function VerifyEmail() {
       try {
         const response = await verifyEmail(token);
         
-        // On success
-        setSuccess(true);
-        setMessage(response.message || 'Email verified successfully! You can now login.');
-        setError(null);
+        // On success - check if login token is provided
+        if (response.token) {
+          // Auto-login: save token and user info
+          localStorage.setItem('token', response.token);
+          if (response.user) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+          }
+          
+          setSuccess(true);
+          setMessage('Email verified successfully! Welcome to CyberGuard Academy.');
+          setError(null);
+          
+          // Countdown and redirect to dashboard
+          const timer = setInterval(() => {
+            setCountdown(prev => {
+              if (prev <= 1) {
+                clearInterval(timer);
+                navigate('/dashboard');
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+
+          return () => clearInterval(timer);
+        } else {
+          // No token provided, just show success message
+          setSuccess(true);
+          setMessage(response.message || 'Email verified successfully! You can now login.');
+          setError(null);
+        }
       } catch (err) {
         // On error
         setSuccess(false);
@@ -41,7 +70,7 @@ function VerifyEmail() {
     };
 
     verifyEmailToken();
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   return (
     <div className="auth-container">
@@ -56,24 +85,26 @@ function VerifyEmail() {
         )}
 
         {!loading && success && (
-          <div className="verification-status">
+          <div className="verification-status success">
             <div className="success-icon">✓</div>
             <p className="success-message">{message}</p>
-            <Link to="/login" className="submit-button">
-              Go to Login
-            </Link>
+            <p className="redirect-message">
+              Redirecting to dashboard in {countdown}s...
+            </p>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{width: `${(5-countdown) * 20}%`}}></div>
+            </div>
           </div>
         )}
 
         {!loading && error && (
-          <div className="verification-status">
+          <div className="verification-status error">
             <div className="error-icon">✗</div>
             <p className="error-message">{error}</p>
             <div className="button-group">
-              <Link to="/register" className="submit-button secondary">
-                Back to Register
-              </Link>
-              {/* Resend verification button can be added later */}
+              <a href="/" className="submit-button">
+                Back to Home
+              </a>
             </div>
           </div>
         )}

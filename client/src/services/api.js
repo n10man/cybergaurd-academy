@@ -49,10 +49,10 @@ export const login = async (email, password) => {
   });
 };
 
-export const register = async (username, email, password) => {
+export const register = async (username, email, password, captchaToken) => {
   return apiRequest('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password, captchaToken }),
   });
 };
 

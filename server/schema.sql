@@ -4,7 +4,14 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    email_verified BOOLEAN DEFAULT false,
+    verification_token VARCHAR(255),
+    token_expiry TIMESTAMP,
+    two_fa_enabled BOOLEAN DEFAULT false,
+    two_fa_secret VARCHAR(255),
+    two_fa_backup_codes JSONB DEFAULT '[]',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create user_progress table
