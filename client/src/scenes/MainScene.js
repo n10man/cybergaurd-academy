@@ -190,6 +190,18 @@ class MainScene extends Phaser.Scene {
       this.isDialogueActive = false;
     });
 
+    // 🚫 Listen for Escape key to close dialogue
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        if (this.isDialogueActive) {
+          console.log('❌ Dialogue closed by ESC key');
+          window.dispatchEvent(new CustomEvent('closeDialogue', {}));
+          window.dispatchEvent(new CustomEvent('dialogueClosed', {}));
+          this.isDialogueActive = false;
+        }
+      }
+    });
+
     window.addEventListener('nextWhiteboardPage', (event) => {
       console.log('📋 Next whiteboard page event received - current page:', this.whiteboardPage);
       this.whiteboardPage = (this.whiteboardPage + 1) % 2; // Toggle between page 0 and 1
@@ -763,6 +775,11 @@ class MainScene extends Phaser.Scene {
       console.log('❌ No hovered object');
       return;
     }
+
+    // Stop player movement and set to idle animation
+    this.player.setVelocity(0, 0);
+    this.player.play('player_idle');
+    this.isDialogueActive = true;
 
     const item = this.currentHoveredObject;
     const props = item.properties || {};

@@ -9,6 +9,20 @@ const DialogueBox = ({ isOpen, speaker, text, onClose, isWhiteboard = false }) =
   const [messageIndex, setMessageIndex] = useState(0);
   const [messages, setMessages] = useState(Array.isArray(text) ? text : [text]);
 
+  // Handle Escape key to close dialogue
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        if (isOpen) {
+          onClose();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => window.removeEventListener('keydown', handleEscapeKey);
+  }, [isOpen, onClose]);
+
   // Reset messages and state when dialogue is opened or text changes
   useEffect(() => {
     if (isOpen) {
@@ -131,8 +145,13 @@ const DialogueBox = ({ isOpen, speaker, text, onClose, isWhiteboard = false }) =
   return (
     <div className="dialogue-box-container">
       <div className="dialogue-box">
-        {/* Speaker Name */}
-        <div className="dialogue-speaker">{speaker}</div>
+        {/* Speaker Name and ESC hint */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div className="dialogue-speaker">{speaker}</div>
+          <div style={{ fontSize: '12px', color: '#888', fontStyle: 'italic' }}>
+            Press ESC to exit
+          </div>
+        </div>
 
         {/* Close Button */}
         <button className="dialogue-close-btn" onClick={onClose}>

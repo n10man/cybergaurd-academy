@@ -19,6 +19,20 @@ const EmailClient = ({ isOpen, onClose }) => {
   const [selectedEmails, setSelectedEmails] = useState(new Set());
   const [linkNotification, setLinkNotification] = useState(null);
 
+  // Handle Escape key to close email client
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        if (isOpen) {
+          onClose();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => window.removeEventListener('keydown', handleEscapeKey);
+  }, [isOpen, onClose]);
+
   // Get 6 real emails and 7 phishing (13 total as requested)
   useEffect(() => {
     const realEmails = SAFE_EMAILS.map(e => ({ ...e, isPhishing: false, folder: 'inbox', read: false }));
@@ -314,6 +328,10 @@ const EmailClient = ({ isOpen, onClose }) => {
         ) : (
           // EMAIL CLIENT SCREEN - Gmail Style
           <div className="email-client-main">
+            {/* ESC Hint */}
+            <div style={{ fontSize: '11px', color: '#666', paddingBottom: '5px', paddingRight: '10px', textAlign: 'right', fontStyle: 'italic' }}>
+              Press ESC or X to exit
+            </div>
             {/* Header */}
             <div className="email-client-header-bar">
               <div className="email-header-left">

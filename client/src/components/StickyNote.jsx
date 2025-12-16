@@ -9,6 +9,20 @@ const StickyNote = () => {
   const [emailProgress, setEmailProgress] = useState({ inbox: 0, processed: 0, total: 13 });
   const [whiteboardUnlocked, setWhiteboardUnlocked] = useState(false);
 
+  // Handle Escape key to close sticky note
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        if (isVisible) {
+          setIsVisible(false);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => window.removeEventListener('keydown', handleEscapeKey);
+  }, [isVisible]);
+
   // Listen for whiteboard opened event - unlock progress button visibility
   useEffect(() => {
     const handleShowBoard = (event) => {
@@ -167,6 +181,10 @@ const StickyNote = () => {
       <div className="sticky-note-container">
         <div className="sticky-note-popup">
           <button className="sticky-note-minimize" onClick={handleMinimize}>−</button>
+          
+          <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px', fontStyle: 'italic', textAlign: 'center' }}>
+            Press ESC to close
+          </div>
           
           <div className="sticky-note-header">Login Credentials</div>
           
