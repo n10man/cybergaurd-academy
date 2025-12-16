@@ -28,7 +28,6 @@ const ComputerScreen = ({ isOpen, onClose }) => {
 
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [score, setScore] = useState(0);
-  const [analyzed, setAnalyzed] = useState(false);
   const [currentFolder, setCurrentFolder] = useState('all-emails');
   const [sidebarWidth, setSidebarWidth] = useState(220);
   const [notification, setNotification] = useState(null);
@@ -347,11 +346,6 @@ const ComputerScreen = ({ isOpen, onClose }) => {
     
     setSelectedEmail(null);
     setAnalyzed(false);
-  };
-
-  const handleSuspiciousLinkClick = (e) => {
-    e.preventDefault();
-    alert('⚠️ WARNING: This link appears suspicious and could be a phishing attempt!\n\nLink: ' + e.currentTarget.href + '\n\nNever click links in unexpected emails - instead, go directly to the official website by typing the URL in your browser.');
   };
 
   // Extract domain name from URL for friendly display
