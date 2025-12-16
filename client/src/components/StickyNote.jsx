@@ -112,11 +112,6 @@ const StickyNote = () => {
     };
   }, []);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setIsMinimized(false);
-  };
-
   const handleMinimize = () => {
     setIsMinimized(true);
   };
@@ -152,9 +147,6 @@ const StickyNote = () => {
       } 
     }));
   };
-
-  // Progress percentage calculation
-  const progressPercent = Math.round((emailProgress.processed / emailProgress.total) * 100);
 
   return (
     <>
