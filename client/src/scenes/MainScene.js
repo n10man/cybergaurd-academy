@@ -186,7 +186,7 @@ class MainScene extends Phaser.Scene {
 
     this.createPlayerAndCamera();
     this.setupInteractions();
-    this.drawHitboxes(); // 🎨 Draw green hitboxes after interactions are created
+    // 🎯 Hitbox visualization disabled - no longer needed
     this.setupControls();
 
     // 🚫 Listen for dialogue state changes from React component
