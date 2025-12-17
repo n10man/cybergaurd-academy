@@ -18,8 +18,8 @@ class MainScene extends Phaser.Scene {
     this.collisionsLayer = null;
     this.npcs = [];
     this.interactions = [];
-    this.spawnX = 1300; // 📍 Bottom left spawn
-    this.spawnY = 500;  // 📍 Bottom left spawn
+    this.spawnX = 150; // 📍 Bottom left spawn
+    this.spawnY = 520;  // 📍 Bottom left spawn
     this.interactText = null;
     this.interactionRadius = 60;
     this.playerHitbox = null; // 🎯 Character hitbox
