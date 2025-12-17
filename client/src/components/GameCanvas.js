@@ -40,9 +40,25 @@ function GameCanvas() {
 
     console.log('GameCanvas: Phaser game initialized');
 
+    // Add page refresh warning
+    const handleBeforeUnload = (event) => {
+      const hasProgress = localStorage.getItem('hrInteracted') === 'true' || 
+                         localStorage.getItem('seniorDevInteracted') === 'true' ||
+                         localStorage.getItem('computerAccessed') === 'true';
+      
+      if (hasProgress) {
+        event.preventDefault();
+        event.returnValue = 'Your progress may not be saved. Are you sure you want to leave?';
+        return 'Your progress may not be saved. Are you sure you want to leave?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     // Cleanup function to destroy game instance on unmount
     return () => {
       console.log('GameCanvas: Destroying Phaser game instance...');
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       if (phaserGameRef.current) {
         phaserGameRef.current.destroy(true);
         phaserGameRef.current = null;

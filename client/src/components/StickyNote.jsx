@@ -38,10 +38,6 @@ const StickyNote = () => {
   useEffect(() => {
     const handleShowStickyNote = (event) => {
       console.log('📝 Showing sticky note popup:', event.detail);
-      // Mark sticky note as viewed
-      localStorage.setItem('stickyNoteViewed', 'true');
-      window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
-      
       // Use credentials from event, but ensure they're fresh from localStorage
       const currentCreds = getCredentials();
       setCredentials(currentCreds);

@@ -18,8 +18,8 @@ class MainScene extends Phaser.Scene {
     this.collisionsLayer = null;
     this.npcs = [];
     this.interactions = [];
-    this.spawnX = 150; // 📍 Bottom left spawn
-    this.spawnY = 520;  // 📍 Bottom left spawn
+    this.spawnX = 50; // 📍 Way more left from HR NPC
+    this.spawnY = 515;  // 📍 More down from HR NPC
     this.interactText = null;
     this.interactionRadius = 60;
     this.playerHitbox = null; // 🎯 Character hitbox
@@ -30,11 +30,11 @@ class MainScene extends Phaser.Scene {
     // 🎮 Progression system - Track which NPCs have been unlocked
     this.interactionOrder = {
       'NPC#1 HR manager': { unlocked: true, order: 0 },
-      'NPC#3 The Senior Dev': { unlocked: false, order: 1 },
-      'main computer': { unlocked: false, requiresWhiteboard: true },
-      'whiteboard': { unlocked: true, order: 0 },
-      'note': { unlocked: false, order: 1 },
-      'Bookshelves': { unlocked: false, order: 2 }
+      'NPC#3 The Senior Dev': { unlocked: false, order: 1, unlockedBy: 'hr' },
+      'note': { unlocked: false, order: 2, unlockedBy: 'senior_dev' },
+      'whiteboard': { unlocked: false, order: 2, unlockedBy: 'senior_dev' },
+      'main computer': { unlocked: false, order: 3, unlockedBy: 'note' },
+      'Bookshelves': { unlocked: false, order: 3, unlockedBy: 'whiteboard' }
     };
     
     // 🎮 Progression system - Load from localStorage or default to 'start'
@@ -94,6 +94,17 @@ class MainScene extends Phaser.Scene {
 
   create() {
     console.log(`🗺️ MainScene: Creating Level -> ${CURRENT_LEVEL}`);
+    
+    // 🔄 Reset all progress on new game start
+    localStorage.removeItem('hrInteracted');
+    localStorage.removeItem('seniorDevInteracted');
+    localStorage.removeItem('stickyNoteViewed');
+    localStorage.removeItem('whiteboardInteracted');
+    localStorage.removeItem('computerAccessed');
+    localStorage.removeItem('metSeniorDev');
+    localStorage.removeItem('gameProgress');
+    localStorage.setItem('gameProgress', 'start');
+    
     this.physics.world.TILE_BIAS = 48;
 
     this.map = this.make.tilemap({ key: 'map_json' });
@@ -345,8 +356,8 @@ class MainScene extends Phaser.Scene {
     }
 
     // Default Spawn (Server Room)
-    const startX = 100; 
-    const startY = 300;
+    const startX = this.spawnX || 220; 
+    const startY = this.spawnY || 480;
 
     this.player = this.physics.add.sprite(startX, startY, 'player_character');
     this.player.setDepth(10);
@@ -371,10 +382,7 @@ class MainScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player);
     this.cameras.main.setZoom(1.0);
 
-    // 🎯 Draw character hitbox (blue circle around player)
-    this.playerHitbox = this.add.graphics();
-    this.playerHitbox.lineStyle(2, 0x0099ff, 0.7);
-    this.playerHitbox.strokeCircle(0, 0, 40); // 40px radius detection circle
+    // 🎯 Character hitbox removed - not needed for gameplay
   }
 
   setupInteractions() {
@@ -452,15 +460,17 @@ class MainScene extends Phaser.Scene {
     // 🎯 Removed hitbox visualization - no need to show them anymore
     // Previously called drawHitboxes() - now disabled
 
-    // Create the interaction hover text with animation
+    // Create the interaction hover text with sticky note styling
     this.interactText = this.add.text(this.cameras.main.centerX, 30, '', {
-        fontSize: '16px',
-        backgroundColor: '#000000',
-        color: '#00FF00',
-        padding: { x: 10, y: 5 },
+        fontSize: '14px',
+        backgroundColor: '#ffffcc',
+        color: '#333333',
+        padding: { x: 12, y: 8 },
         align: 'center',
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        fontFamily: 'Comic Sans MS, cursive'
     });
+    this.interactText.setStroke('#d4af37', 2);
     this.interactText.setDepth(9999);
     this.interactText.setOrigin(0.5, 0);
     this.interactText.setVisible(false);
@@ -469,7 +479,7 @@ class MainScene extends Phaser.Scene {
     // Add floating animation
     this.tweens.add({
         targets: this.interactText,
-        y: { from: 30, to: 35 },
+        y: { from: 30, to: 38 },
         duration: 800,
         ease: 'Sine.inOut',
         loop: -1,
@@ -552,6 +562,13 @@ class MainScene extends Phaser.Scene {
       // Check if an input field is focused
       const activeElement = document.activeElement;
       const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
+      
+      // Handle ESC key to close dialogue
+      if (e.code === 'Escape') {
+        window.dispatchEvent(new CustomEvent('closeDialogue', {}));
+        window.dispatchEvent(new CustomEvent('dialogueClosed', {}));
+        return;
+      }
       
       // Only track game keys if not typing
       if (!isInputFocused) {
@@ -770,36 +787,18 @@ class MainScene extends Phaser.Scene {
       return true;
     }
 
-    // Special case: Computer requires whiteboard interaction first
-    if (interactionName === 'main computer' && metadata.requiresWhiteboard) {
-      const whiteboardInteracted = localStorage.getItem('whiteboardInteracted') === 'true';
-      if (whiteboardInteracted) {
-        metadata.unlocked = true;
-        return true;
-      }
-      return false;
+    // Check unlock dependencies
+    if (metadata.unlockedBy === 'hr') {
+      return localStorage.getItem('hrInteracted') === 'true';
     }
-
-    // Sequential unlock: Check if previous interaction was completed
-    const currentOrder = metadata.order;
-    const hrInteracted = localStorage.getItem('hrInteracted') === 'true';
-    const seniorDevInteracted = localStorage.getItem('seniorDevInteracted') === 'true';
-
-    if (currentOrder === 0) {
-      // First in sequence - always allowed
-      return true;
-    } else if (currentOrder === 1) {
-      // Second in sequence - requires HR interaction
-      if (interactionName === 'NPC#3 The Senior Dev') {
-        return hrInteracted;
-      }
-      if (interactionName === 'note') {
-        return seniorDevInteracted;
-      }
-      return false;
-    } else if (currentOrder === 2) {
-      // Third in sequence - requires Senior Dev interaction
-      return seniorDevInteracted;
+    if (metadata.unlockedBy === 'senior_dev') {
+      return localStorage.getItem('seniorDevInteracted') === 'true';
+    }
+    if (metadata.unlockedBy === 'note') {
+      return localStorage.getItem('stickyNoteViewed') === 'true';
+    }
+    if (metadata.unlockedBy === 'whiteboard') {
+      return localStorage.getItem('whiteboardInteracted') === 'true';
     }
 
     return false;
@@ -913,14 +912,14 @@ class MainScene extends Phaser.Scene {
         }
       }
     }
-    // Special handler for Senior Dev - unlocks more interactions
+    // Special handler for Senior Dev - unlocks sticky note and whiteboard
     else if (item.name === 'NPC#3 The Senior Dev') {
       console.log('💬 Showing Senior Dev dialogue...');
       
       // Mark Senior Dev as interacted
       localStorage.setItem('seniorDevInteracted', 'true');
       this.interactionOrder['note'].unlocked = true;
-      this.interactionOrder['Bookshelves'].unlocked = true;
+      this.interactionOrder['whiteboard'].unlocked = true;
       
       // Check if this is first interaction
       const hasMetSeniorDev = localStorage.getItem('metSeniorDev') === 'true';
@@ -948,6 +947,10 @@ class MainScene extends Phaser.Scene {
     // Special handler for the note - shows login credentials
     else if (item.name === 'note') {
       console.log('📝 Showing sticky note with credentials...');
+      // Mark sticky note as viewed
+      localStorage.setItem('stickyNoteViewed', 'true');
+      // Unlock computer access
+      this.interactionOrder['main computer'].unlocked = true;
       const credentials = getCredentials();
       window.dispatchEvent(new CustomEvent('showStickyNote', {
         detail: {
@@ -956,6 +959,7 @@ class MainScene extends Phaser.Scene {
           devEmail: credentials.devEmail
         }
       }));
+      window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
       this.isDialogueActive = false;
     }
     // Special handler for main computer - open email client
@@ -970,7 +974,7 @@ class MainScene extends Phaser.Scene {
       console.log('📋 Opening Whiteboard...');
       // Mark whiteboard as interacted
       localStorage.setItem('whiteboardInteracted', 'true');
-      this.interactionOrder['main computer'].unlocked = true;
+      this.interactionOrder['Bookshelves'].unlocked = true;
       this.whiteboardOpen = true;
       this.whiteboardPage = 0;
       // Dispatch event to show progress button
