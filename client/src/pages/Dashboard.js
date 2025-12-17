@@ -4,6 +4,7 @@ import GameCanvas from '../components/GameCanvas';
 import EmailClient from '../components/EmailClient';
 import ComputerScreen from '../components/ComputerScreen';
 import StickyNote from '../components/StickyNote';
+import Guidelines from '../components/Guidelines';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -38,6 +39,7 @@ function Dashboard() {
         </div>
       </div>
       <div className="dashboard-content">
+        <Guidelines />
         <div className="game-section">
           <GameCanvas />
         </div>

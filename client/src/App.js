@@ -24,6 +24,24 @@ function ModulePage() {
 }
 
 function App() {
+  React.useEffect(() => {
+    // 🚀 DEVELOPMENT: Skip login and go directly to dashboard
+    const isDevelopment = true; // Set to false to enable login
+    if (isDevelopment && window.location.pathname === '/') {
+      // Set mock user and token for testing
+      if (!localStorage.getItem('token')) {
+        localStorage.setItem('token', 'dev-token-12345');
+        localStorage.setItem('user', JSON.stringify({
+          id: 1,
+          username: 'DevUser',
+          email: 'dev@test.com'
+        }));
+        localStorage.setItem('gameProgress', 'start');
+      }
+      window.location.href = '/dashboard';
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <Router>

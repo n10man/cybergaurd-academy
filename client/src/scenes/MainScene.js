@@ -18,14 +18,24 @@ class MainScene extends Phaser.Scene {
     this.collisionsLayer = null;
     this.npcs = [];
     this.interactions = [];
-    this.spawnX = 0;
-    this.spawnY = 0;
+    this.spawnX = 1300; // 📍 Bottom left spawn
+    this.spawnY = 500;  // 📍 Bottom left spawn
     this.interactText = null;
     this.interactionRadius = 60;
     this.playerHitbox = null; // 🎯 Character hitbox
     this.dialogueBox = null; // 💬 Dialogue box at bottom
     this.whiteboardPage = 0; // 📋 Whiteboard page tracker (0=intro, 1=progress)
     this.whiteboardOpen = false; // 📋 Whiteboard is open
+    
+    // 🎮 Progression system - Track which NPCs have been unlocked
+    this.interactionOrder = {
+      'NPC#1 HR manager': { unlocked: true, order: 0 },
+      'NPC#3 The Senior Dev': { unlocked: false, order: 1 },
+      'main computer': { unlocked: false, requiresWhiteboard: true },
+      'whiteboard': { unlocked: true, order: 0 },
+      'note': { unlocked: false, order: 1 },
+      'Bookshelves': { unlocked: false, order: 2 }
+    };
     
     // 🎮 Progression system - Load from localStorage or default to 'start'
     const savedProgress = localStorage.getItem('gameProgress');
@@ -439,6 +449,9 @@ class MainScene extends Phaser.Scene {
 
     console.log(`✅ Total interactable zones: ${this.interactions.length}`);
 
+    // 🎯 Removed hitbox visualization - no need to show them anymore
+    // Previously called drawHitboxes() - now disabled
+
     // Create the interaction hover text with animation
     this.interactText = this.add.text(this.cameras.main.centerX, 30, '', {
         fontSize: '16px',
@@ -466,32 +479,10 @@ class MainScene extends Phaser.Scene {
     this.currentHoveredObject = null;
   }
 
-  drawHitboxes() {
-    // Draw green rectangles for all interactable zones
-    const graphics = this.add.graphics();
-    graphics.lineStyle(3, 0x00ff00, 0.7); // Green color, 3px width, 70% opacity
-    graphics.setDepth(1000); // Above most objects but below UI
-    
-    this.interactions.forEach((item) => {
-      // Draw rectangle at the zone position
-      const x = item.x;
-      const y = item.y;
-      const width = item.width;
-      const height = item.height;
-      
-      graphics.strokeRect(x, y, width, height);
-      
-      // Optional: Draw a small label at the top
-      const text = this.add.text(x + width/2, y - 10, item.name, {
-        fontSize: '12px',
-        color: '#00FF00',
-        backgroundColor: '#000000',
-        padding: { x: 4, y: 2 }
-      });
-      text.setOrigin(0.5, 1);
-      text.setDepth(1001);
-    });
-  }
+  // 🎨 OLD FUNCTION: Draw hitboxes - DISABLED
+  // drawHitboxes() {
+  //   // Hitbox visualization disabled - not needed for production
+  // }
 
   createSmartNPC(x, y, name, data) {
     // Use specific character sprites for NPCs
@@ -766,8 +757,52 @@ class MainScene extends Phaser.Scene {
 
   // 🎮 Check if an interaction is allowed based on current game progression
   isInteractionAllowed(interactionName) {
-    // 🚀 DEVELOPER MODE: Allow all interactions regardless of progression
-    return true;
+    // Get interaction metadata
+    const metadata = this.interactionOrder[interactionName];
+    
+    if (!metadata) {
+      // Unknown interaction - allow it
+      return true;
+    }
+
+    // Check if already unlocked
+    if (metadata.unlocked) {
+      return true;
+    }
+
+    // Special case: Computer requires whiteboard interaction first
+    if (interactionName === 'main computer' && metadata.requiresWhiteboard) {
+      const whiteboardInteracted = localStorage.getItem('whiteboardInteracted') === 'true';
+      if (whiteboardInteracted) {
+        metadata.unlocked = true;
+        return true;
+      }
+      return false;
+    }
+
+    // Sequential unlock: Check if previous interaction was completed
+    const currentOrder = metadata.order;
+    const hrInteracted = localStorage.getItem('hrInteracted') === 'true';
+    const seniorDevInteracted = localStorage.getItem('seniorDevInteracted') === 'true';
+
+    if (currentOrder === 0) {
+      // First in sequence - always allowed
+      return true;
+    } else if (currentOrder === 1) {
+      // Second in sequence - requires HR interaction
+      if (interactionName === 'NPC#3 The Senior Dev') {
+        return hrInteracted;
+      }
+      if (interactionName === 'note') {
+        return seniorDevInteracted;
+      }
+      return false;
+    } else if (currentOrder === 2) {
+      // Third in sequence - requires Senior Dev interaction
+      return seniorDevInteracted;
+    }
+
+    return false;
   }
 
   handleInteraction() {
@@ -795,6 +830,10 @@ class MainScene extends Phaser.Scene {
     if (item.name === 'NPC#1 HR manager') {
       console.log('💬 Showing HR Manager dialogue...');
       
+      // Mark HR as interacted
+      localStorage.setItem('hrInteracted', 'true');
+      this.interactionOrder['NPC#3 The Senior Dev'].unlocked = true;
+      
       // Check if halfway done
       if (this.isHalfwayDone() && !this.hasShownHalfwayMessage()) {
         const halfwayMessage = `Great work! You're halfway through the emails. You've caught quite a few phishing attempts already. Keep up the good work - when you finish analyzing all the emails, come back and let me know so I can show you what to do next.`;
@@ -806,6 +845,8 @@ class MainScene extends Phaser.Scene {
             onClose: () => {
               this.markHalfwayMessageShown();
               this.isDialogueActive = false; // 🚫 Unlock movement
+              // Dispatch event to update guidelines
+              window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
             }
           } 
         }));
@@ -821,6 +862,8 @@ class MainScene extends Phaser.Scene {
               console.log('🔄 Moving to hr_welcome state');
               this.saveProgress('hr_welcome');
               this.isDialogueActive = false; // 🚫 Unlock movement
+              // Dispatch event to update guidelines
+              window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
             }
           } 
         }));
@@ -874,6 +917,11 @@ class MainScene extends Phaser.Scene {
     else if (item.name === 'NPC#3 The Senior Dev') {
       console.log('💬 Showing Senior Dev dialogue...');
       
+      // Mark Senior Dev as interacted
+      localStorage.setItem('seniorDevInteracted', 'true');
+      this.interactionOrder['note'].unlocked = true;
+      this.interactionOrder['Bookshelves'].unlocked = true;
+      
       // Check if this is first interaction
       const hasMetSeniorDev = localStorage.getItem('metSeniorDev') === 'true';
       
@@ -920,10 +968,14 @@ class MainScene extends Phaser.Scene {
     // Special handler for whiteboard - show two-page dialogue
     else if (item.name === 'whiteboard') {
       console.log('📋 Opening Whiteboard...');
+      // Mark whiteboard as interacted
+      localStorage.setItem('whiteboardInteracted', 'true');
+      this.interactionOrder['main computer'].unlocked = true;
       this.whiteboardOpen = true;
       this.whiteboardPage = 0;
       // Dispatch event to show progress button
       window.dispatchEvent(new CustomEvent('showBoard', { detail: {} }));
+      window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
       this.showWhiteboardPage();
     }
     // Bookshelf interaction

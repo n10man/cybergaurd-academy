@@ -63,6 +63,10 @@ const EmailClient = ({ isOpen, onClose }) => {
   // Disable Phaser keyboard input when modal is open to allow form input
   useEffect(() => {
     if (isOpen) {
+      // Mark computer as accessed
+      localStorage.setItem('computerAccessed', 'true');
+      window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
+      
       // Find all Phaser scenes and disable keyboard input
       const scenes = window.__PHASER_SCENES;
       if (scenes) {
