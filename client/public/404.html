@@ -1,23 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>Redirecting...</title>
-    <script type="text/javascript">
-      var pathSegments = window.location.pathname.split('/').filter(Boolean);
-      var isGitHubPages = pathSegments[0] === 'cybergaurd-academy';
-      var basePath = isGitHubPages ? '/cybergaurd-academy' : '';
-      
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        basePath + '/?p=/' +
-        pathSegments.slice(isGitHubPages ? 1 : 0).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
-    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="CyberGuard Academy - Learn cybersecurity through gamified training"
+    />
+    <title>CyberGuard Academy</title>
   </head>
   <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
   </body>
 </html>
