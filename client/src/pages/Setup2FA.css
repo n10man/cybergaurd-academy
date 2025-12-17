@@ -1,0 +1,252 @@
+.setup-2fa-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.setup-2fa-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.setup-step h2 {
+  color: #667eea;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.8em;
+}
+
+.setup-step p {
+  color: #666;
+  margin: 15px 0;
+  line-height: 1.6;
+}
+
+.security-benefits {
+  margin: 30px 0;
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.benefit {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+  align-items: flex-start;
+}
+
+.benefit-icon {
+  color: #667eea;
+  font-size: 1.3em;
+  font-weight: bold;
+  min-width: 25px;
+}
+
+.benefit h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 1em;
+}
+
+.benefit p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.setup-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.btn {
+  padding: 12px 20px;
+  font-size: 1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+}
+
+.qrcode-container {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.qrcode-image {
+  width: 250px;
+  height: 250px;
+  border: 3px solid #667eea;
+  border-radius: 8px;
+}
+
+.manual-entry {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+}
+
+.manual-entry p {
+  margin: 0 0 10px 0;
+  font-size: 0.9em;
+}
+
+.secret-code {
+  display: block;
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 1.1em;
+  letter-spacing: 2px;
+  text-align: center;
+  user-select: all;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+}
+
+.setup-note {
+  color: #666;
+  font-size: 0.9em;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.form-group {
+  margin: 20px 0;
+}
+
+.verification-input {
+  width: 100%;
+  padding: 15px;
+  font-size: 2em;
+  text-align: center;
+  letter-spacing: 10px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-weight: bold;
+  font-family: monospace;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.verification-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 5px;
+  margin: 15px 0;
+  font-size: 0.95em;
+}
+
+.success-checkmark {
+  font-size: 4em;
+  text-align: center;
+  color: #28a745;
+  margin: 20px 0;
+}
+
+.backup-codes-section {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 4px solid #dc3545;
+}
+
+.backup-codes-section h3 {
+  margin-top: 0;
+  color: #dc3545;
+}
+
+.backup-codes-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 15px 0;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.backup-code {
+  font-family: monospace;
+  font-size: 0.85em;
+  padding: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  user-select: all;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+  .setup-2fa-card {
+    padding: 25px;
+  }
+
+  .qrcode-image {
+    width: 200px;
+    height: 200px;
+  }
+
+  .backup-codes-list {
+    grid-template-columns: 1fr;
+  }
+
+  .verification-input {
+    font-size: 1.5em;
+    letter-spacing: 5px;
+  }
+}

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard Academy - Tiled Map Viewer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; background: #1a1a2e; overflow: hidden; }
+        #container { display: flex; width: 100%; height: 100%; }
+        #canvas-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; }
+        canvas { border: 3px solid #00ffff; display: block; background: #000; cursor: move; }
+        #controls-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            color: #00ffff;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            z-index: 100;
+        }
+        #controls-info h3 { color: #00ffff; margin: 0 0 10px 0; font-size: 14px; }
+        #controls-info p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-wrapper">
+            <canvas id="gameCanvas" width="1024" height="768"></canvas>
+        </div>
+        <div id="controls-info">
+            <h3>🎮 Controls</h3>
+            <p>⬆️ Arrow Keys or WASD - Move</p>
+            <p>🖱️ Click - Interact</p>
+        </div>
+    </div>
+
+    <script src="assets/maps/first_map.js"></script>
+
+    <script>
+        // ============================================
+        // LOGGER (Removed - no more right panel)
+        // ============================================
+        // Logging disabled for cleaner UI
+
+        // ============================================
+        // CANVAS SETUP
+        // ============================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        
+        console.log(`✅ Canvas: ${canvas.width}x${canvas.height}`);
+
+        // ============================================
+        // LOAD MAP DATA
+        // ============================================
+        const mapData = typeof TileMaps !== 'undefined' && TileMaps.first_map ? TileMaps.first_map : null;
+        
+        if (!mapData) {
+            console.error('❌ Map data not found');
+        } else {
+            console.log(`✅ Map: ${mapData.width}x${mapData.height} tiles`);
+            console.log(`ℹ️ Tile: ${mapData.tilewidth}x${mapData.tileheight}px`);
+            console.log(`ℹ️ Layers: ${mapData.layers.length} | Tilesets: ${mapData.tilesets.length}`);
+        }
+
+        // ============================================
+        // LOAD TILESET IMAGES
+        // ============================================
+        console.log('📥 Loading tilesets...');
+
+        const tilesets = {};
+        let tilesetLoadCount = 0;
+        const tilesetCount = mapData.tilesets.length;
+
+        function startRender() {
+            if (tilesetLoadCount === tilesetCount) {
+                render();
+            }
+        }
+
+        mapData.tilesets.forEach(ts => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = () => {
+                tilesets[ts.name] = {
+                    image: img,
+                    firstgid: ts.firstgid,
+                    name: ts.name,
+                    tilewidth: ts.tilewidth,
+                    tileheight: ts.tileheight,
+                    columns: ts.columns
+                };
+                tilesetLoadCount++;
+                console.log(`✅ ${ts.name}`);
+                startRender();
+            };
+            
+            img.onerror = () => {
+                console.error(`❌ Failed to load: ${ts.name}`);
+                tilesetLoadCount++;
+                startRender();
+            };
+            
+            img.src = `assets/tilesets/${ts.name}.png`;
+        });
+
+        // ============================================
+        // RENDERING
+        // ============================================
+        function render() {
+            console.log('🎨 Rendering tiles...');
+
+            try {
+                const tileWidth = mapData.tilewidth;
+                const tileHeight = mapData.tileheight;
+                const mapWidth = mapData.width;
+                const mapHeight = mapData.height;
+
+                // Clear canvas
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                let tileRendered = 0;
+                let layerRendered = 0;
+
+                // Render each layer
+                mapData.layers.forEach((layer, layerIdx) => {
+                    if (layer.type !== 'tilelayer' || !layer.data || !layer.visible) return;
+
+                    // Render each tile
+                    for (let i = 0; i < layer.data.length; i++) {
+                        const gid = layer.data[i];
+                        if (gid === 0) continue;
+
+                        // Find which tileset this GID belongs to
+                        let tileset = null;
+                        let tilesetFirstGid = 0;
+
+                        for (const tsName in tilesets) {
+                            const ts = tilesets[tsName];
+                            if (ts.firstgid <= gid && ts.firstgid > tilesetFirstGid) {
+                                tileset = ts;
+                                tilesetFirstGid = ts.firstgid;
+                            }
+                        }
+
+                        if (!tileset) continue;
+
+                        // Calculate local GID
+                        const localGid = gid - tileset.firstgid;
+
+                        // Position in tileset image
+                        const col = localGid % tileset.columns;
+                        const row = Math.floor(localGid / tileset.columns);
+
+                        const srcX = col * tileset.tilewidth;
+                        const srcY = row * tileset.tileheight;
+
+                        // Position on map
+                        const mapCol = i % mapWidth;
+                        const mapRow = Math.floor(i / mapWidth);
+                        const destX = mapCol * tileWidth;
+                        const destY = mapRow * tileHeight;
+
+                        // Only render tiles visible on screen
+                        if (destX + tileWidth > -canvas.width &&
+                            destX < canvas.width + canvas.width &&
+                            destY + tileHeight > -canvas.height &&
+                            destY < canvas.height + canvas.height) {
+                            
+                            ctx.drawImage(
+                                tileset.image,
+                                srcX, srcY, tileset.tilewidth, tileset.tileheight,
+                                destX, destY, tileWidth, tileHeight
+                            );
+
+                            tileRendered++;
+                        }
+                    }
+
+                    layerRendered++;
+                });
+
+                console.log(`✅ Rendered: ${layerRendered} layers, ${tileRendered} tiles visible`);
+
+                // ============================================
+                // PLAYER
+                // ============================================
+                const mapPixelWidth = mapWidth * tileWidth;
+                const mapPixelHeight = mapHeight * tileHeight;
+
+                let player = {
+                    x: mapPixelWidth / 2,
+                    y: mapPixelHeight / 2,
+                    radius: 12,
+                    vx: 0,
+                    vy: 0
+                };
+
+                console.log(`✅ Player at (${player.x}, ${player.y})`);
+
+                // ============================================
+                // CAMERA & INPUT
+                // ============================================
+                console.log('⌨️ Controls: Arrow keys or WASD to move');
+
+                const keys = {};
+                window.addEventListener('keydown', (e) => {
+                    keys[e.key.toLowerCase()] = true;
+                });
+                window.addEventListener('keyup', (e) => {
+                    keys[e.key.toLowerCase()] = false;
+                });
+
+                // ============================================
+                // GAME LOOP
+                // ============================================
+                let frameCount = 0;
+                let lastTime = performance.now();
+
+                function gameLoop(currentTime) {
+                    frameCount++;
+
+                    // Get deltatime
+                    const deltaTime = (currentTime - lastTime) / 1000;
+                    lastTime = currentTime;
+
+                    // Input
+                    player.vx = 0;
+                    player.vy = 0;
+
+                    const speed = 300;
+                    if (keys['arrowleft'] || keys['a']) player.vx -= speed;
+                    if (keys['arrowright'] || keys['d']) player.vx += speed;
+                    if (keys['arrowup'] || keys['w']) player.vy -= speed;
+                    if (keys['arrowdown'] || keys['s']) player.vy += speed;
+
+                    // Update player
+                    player.x += player.vx * deltaTime;
+                    player.y += player.vy * deltaTime;
+
+                    // Bounds
+                    player.x = Math.max(player.radius, Math.min(mapPixelWidth - player.radius, player.x));
+                    player.y = Math.max(player.radius, Math.min(mapPixelHeight - player.radius, player.y));
+
+                    // ============================================
+                    // RENDER FRAME
+                    // ============================================
+
+                    // Clear canvas
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
+                    // Render tiles (draw from top-left, fixed camera)
+                    mapData.layers.forEach((layer, layerIdx) => {
+                        if (layer.type !== 'tilelayer' || !layer.data || !layer.visible) return;
+
+                        for (let i = 0; i < layer.data.length; i++) {
+                            const gid = layer.data[i];
+                            if (gid === 0) continue;
+
+                            // Find tileset
+                            let tileset = null;
+                            let tilesetFirstGid = 0;
+
+                            for (const tsName in tilesets) {
+                                const ts = tilesets[tsName];
+                                if (ts.firstgid <= gid && ts.firstgid > tilesetFirstGid) {
+                                    tileset = ts;
+                                    tilesetFirstGid = ts.firstgid;
+                                }
+                            }
+
+                            if (!tileset) continue;
+
+                            const localGid = gid - tileset.firstgid;
+                            const col = localGid % tileset.columns;
+                            const row = Math.floor(localGid / tileset.columns);
+
+                            const srcX = col * tileset.tilewidth;
+                            const srcY = row * tileset.tileheight;
+
+                            const mapCol = i % mapWidth;
+                            const mapRow = Math.floor(i / mapWidth);
+                            const destX = mapCol * tileWidth;
+                            const destY = mapRow * tileHeight;
+
+                            // Only render tiles within canvas
+                            if (destX + tileWidth < 0 || destX > canvas.width ||
+                                destY + tileHeight < 0 || destY > canvas.height) {
+                                continue;
+                            }
+
+                            ctx.drawImage(
+                                tileset.image,
+                                srcX, srcY, tileset.tilewidth, tileset.tileheight,
+                                destX, destY, tileWidth, tileHeight
+                            );
+                        }
+                    });
+
+                    // Render player
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // FPS counter
+                    if (frameCount % 30 === 0) {
+                        const fps = Math.round(1 / deltaTime);
+                        console.log(`📊 FPS: ${fps} | Pos: (${player.x.toFixed(0)}, ${player.y.toFixed(0)})`);
+                    }
+
+                    requestAnimationFrame(gameLoop);
+                }
+
+                console.log('🎮 GAME STARTED!');
+                requestAnimationFrame(gameLoop);
+
+            } catch (error) {
+                console.error(`Render error: ${error.message}`);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

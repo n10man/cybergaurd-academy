@@ -1,0 +1,13 @@
+.module-transition {
+  transition: opacity 0.5s ease-in-out;
+  opacity: 1;
+}
+
+.module-transition.fade-out {
+  opacity: 0;
+}
+
+.module-transition.fade-in {
+  opacity: 1;
+}
+
