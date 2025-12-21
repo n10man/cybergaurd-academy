@@ -9,19 +9,20 @@ const StickyNote = () => {
   const [emailProgress, setEmailProgress] = useState({ inbox: 0, processed: 0, total: 13 });
   const [whiteboardUnlocked, setWhiteboardUnlocked] = useState(false);
 
-  // Handle Escape key to close sticky note
+  // Handle Escape key to close sticky note popup (but keep icon visible)
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape' || event.key === 'Esc') {
-        if (isVisible) {
-          setIsVisible(false);
+        if (isVisible && !isMinimized) {
+          // Close the popup but keep the sticky note icon visible
+          setIsMinimized(true);
         }
       }
     };
     
     window.addEventListener('keydown', handleEscapeKey);
     return () => window.removeEventListener('keydown', handleEscapeKey);
-  }, [isVisible]);
+  }, [isVisible, isMinimized]);
 
   // Listen for whiteboard opened event - unlock progress button visibility
   useEffect(() => {

@@ -102,8 +102,10 @@ class MainScene extends Phaser.Scene {
     localStorage.removeItem('whiteboardInteracted');
     localStorage.removeItem('computerAccessed');
     localStorage.removeItem('metSeniorDev');
+    localStorage.removeItem('seniorDevProgress');
     localStorage.removeItem('gameProgress');
     localStorage.setItem('gameProgress', 'start');
+    localStorage.setItem('seniorDevProgress', 'first');
     
     this.physics.world.TILE_BIAS = 48;
 
@@ -921,28 +923,38 @@ class MainScene extends Phaser.Scene {
       this.interactionOrder['note'].unlocked = true;
       this.interactionOrder['whiteboard'].unlocked = true;
       
-      // Check if this is first interaction
-      const hasMetSeniorDev = localStorage.getItem('metSeniorDev') === 'true';
+      // Check progression state for Senior Dev
+      const seniorDevProgress = localStorage.getItem('seniorDevProgress') || 'first';
       
-      let devMessage;
-      if (!hasMetSeniorDev) {
+      if (seniorDevProgress === 'first') {
         // First interaction - full introduction
-        devMessage = `Hey! I'm David, the Senior Developer. I work here on the cybersecurity team.\n\nMy email is: david.tan@company.com\n\nThe login credentials you will need to access the company's email are on the sticky note on my table.`;
-        localStorage.setItem('metSeniorDev', 'true');
+        const firstMessage = `Hey! I'm David, the Senior Developer. I work here on the cybersecurity team.\n\nMy email is: david.tan@company.com\n\nThe login credentials you will need to access the company's email are on the sticky note on my table.`;
+        
+        window.dispatchEvent(new CustomEvent('showDialogue', { 
+          detail: { 
+            name: 'Senior Dev - David', 
+            text: firstMessage,
+            onClose: () => {
+              // Automatically advance to second message on close
+              localStorage.setItem('seniorDevProgress', 'second');
+              this.isDialogueActive = false; // 🚫 Unlock movement
+            }
+          } 
+        }));
       } else {
-        // Repeat interactions - just point to the sticky note and computer
-        devMessage = `Don't forget - the login credentials are on that sticky note right there. You'll need them to access the email on the main computer.`;
+        // Second interaction - just point to the sticky note and computer
+        const secondMessage = `Don't forget - the login credentials are on that sticky note right there. You'll need them to access the email on the main computer.`;
+        
+        window.dispatchEvent(new CustomEvent('showDialogue', { 
+          detail: { 
+            name: 'Senior Dev - David', 
+            text: secondMessage,
+            onClose: () => {
+              this.isDialogueActive = false; // 🚫 Unlock movement
+            }
+          } 
+        }));
       }
-      
-      window.dispatchEvent(new CustomEvent('showDialogue', { 
-        detail: { 
-          name: 'Senior Dev - David', 
-          text: devMessage,
-          onClose: () => {
-            this.isDialogueActive = false; // 🚫 Unlock movement
-          }
-        } 
-      }));
     }
     // Special handler for the note - shows login credentials
     else if (item.name === 'note') {

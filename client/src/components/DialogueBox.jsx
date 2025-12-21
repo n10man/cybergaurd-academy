@@ -88,43 +88,24 @@ const DialogueBox = ({ isOpen, speaker, text, onClose, isWhiteboard = false }) =
       // Normal dialogue mode
       if (e.code === 'Space') {
         e.preventDefault();
-        setSpaceCount(prev => prev + 1);
-
-        // Reset timer for counting presses
+        
+        // Clear any existing timer
         if (spaceTimer) clearTimeout(spaceTimer);
-        setSpaceTimer(setTimeout(() => {
-          // Handle space actions
-          if (spaceCount === 1) {
-            // Speed up
-            if (!isComplete) {
-              setDisplayedText(messages[messageIndex]);
-              setIsComplete(true);
-            }
-          } else if (spaceCount === 2) {
-            // End message
-            setDisplayedText(messages[messageIndex]);
-            setIsComplete(true);
-          } else if (spaceCount === 3) {
-            // Next message or close
-            if (messageIndex < messages.length - 1) {
-              setMessageIndex(idx => idx + 1);
-              setDisplayedText('');
-              setIsComplete(false);
-            } else {
-              onClose();
-            }
-          } else if (isComplete) {
-            // If message is complete and space pressed again, go to next or close
-            if (messageIndex < messages.length - 1) {
-              setMessageIndex(idx => idx + 1);
-              setDisplayedText('');
-              setIsComplete(false);
-            } else {
-              onClose();
-            }
+        
+        if (!isComplete) {
+          // Speed up - complete the typewriter instantly
+          setDisplayedText(messages[messageIndex]);
+          setIsComplete(true);
+        } else {
+          // Text is already complete - go to next message or close
+          if (messageIndex < messages.length - 1) {
+            setMessageIndex(idx => idx + 1);
+            setDisplayedText('');
+            setIsComplete(false);
+          } else {
+            onClose();
           }
-          setSpaceCount(0);
-        }, 300)); // 300ms window for multi-press
+        }
       }
       // ESCAPE closes the dialogue
       if (e.code === 'Escape') {
@@ -138,7 +119,7 @@ const DialogueBox = ({ isOpen, speaker, text, onClose, isWhiteboard = false }) =
       window.removeEventListener('keydown', handleKeyDown);
       if (spaceTimer) clearTimeout(spaceTimer);
     };
-  }, [isOpen, isComplete, messages, messageIndex, onClose, spaceCount, spaceTimer, isWhiteboard]);
+  }, [isOpen, isComplete, messages, messageIndex, onClose, spaceTimer, isWhiteboard]);
 
   if (!isOpen) return null;
 
@@ -167,7 +148,7 @@ const DialogueBox = ({ isOpen, speaker, text, onClose, isWhiteboard = false }) =
         {/* Continue Indicator */}
         {isComplete && (
           <div className="dialogue-continue">
-            {isWhiteboard ? 'Press X to close | Press Z for next page' : 'Press SPACE (1x: speed, 2x: end, 3x: next/close)'}
+            {isWhiteboard ? 'Press X to close | Press Z for next page' : 'Press SPACE to continue or close'}
           </div>
         )}
       </div>

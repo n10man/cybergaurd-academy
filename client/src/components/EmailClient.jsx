@@ -19,12 +19,19 @@ const EmailClient = ({ isOpen, onClose }) => {
   const [selectedEmails, setSelectedEmails] = useState(new Set());
   const [linkNotification, setLinkNotification] = useState(null);
 
+  // Wrapper to close email client and unlock movement
+  const handleEmailClientClose = () => {
+    // Dispatch event to tell MainScene that dialogue/interaction is over
+    window.dispatchEvent(new CustomEvent('dialogueClosed', {}));
+    onClose();
+  };
+
   // Handle Escape key to close email client
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape' || event.key === 'Esc') {
         if (isOpen) {
-          onClose();
+          handleEmailClientClose();
         }
       }
     };
@@ -292,7 +299,7 @@ const EmailClient = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="email-client-overlay" onClick={onClose}>
+    <div className="email-client-overlay" onClick={handleEmailClientClose}>
       <div className="email-client-window" onClick={(e) => e.stopPropagation()}>
         {linkNotification && (
           <div className="link-notification">
@@ -361,7 +368,7 @@ const EmailClient = ({ isOpen, onClose }) => {
               <div className="email-header-right">
                 <span className="email-score">Score: {score}</span>
                 <button className="email-logout-btn" onClick={handleLogout}>Logout</button>
-                <button className="email-close-btn" onClick={onClose}>Close</button>
+                <button className="email-close-btn" onClick={handleEmailClientClose}>Close</button>
               </div>
             </div>
 

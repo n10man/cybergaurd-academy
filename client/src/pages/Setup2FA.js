@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AiOutlineLock, AiOutlineQrcode, AiOutlineCheckCircle, AiOutlineWarning, AiOutlineDownload } from 'react-icons/ai';
 import './Setup2FA.css';
 
 function Setup2FA() {
@@ -24,7 +25,7 @@ function Setup2FA() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      console.log('📱 Generating QR Code...');
+      console.log('Generating QR Code...');
       console.log('Token exists:', !!token);
       console.log('Token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
       
@@ -108,8 +109,9 @@ function Setup2FA() {
       <div className="setup-2fa-card">
         {step === 'intro' && (
           <div className="setup-step">
-            <h2>🔐 Enable Two-Factor Authentication</h2>
-            <p>Two-factor authentication adds an extra layer of security to your account.</p>
+            <h2><AiOutlineLock className="step-icon" /> Enable Two-Factor Authentication</h2>
+            <p className="mandatory-notice">⚠️ Two-factor authentication is REQUIRED for security</p>
+            <p>Two-factor authentication adds an extra layer of security to your account by requiring a code from your phone when you log in.</p>
 
             <div className="security-benefits">
               <div className="benefit">
@@ -142,19 +144,13 @@ function Setup2FA() {
               >
                 Get Started
               </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => navigate('/dashboard')}
-              >
-                Skip for Now
-              </button>
             </div>
           </div>
         )}
 
         {step === 'qrcode' && (
           <div className="setup-step">
-            <h2>📱 Scan QR Code</h2>
+            <h2><AiOutlineQrcode className="step-icon" /> Scan QR Code</h2>
             <p>Use your authenticator app to scan this QR code:</p>
 
             {qrCode ? (
@@ -173,7 +169,7 @@ function Setup2FA() {
                 </div>
 
                 <p className="setup-note">
-                  👉 Recommended apps: Google Authenticator, Microsoft Authenticator, Authy
+                  Recommended apps: Google Authenticator, Microsoft Authenticator, Authy
                 </p>
 
                 <button 
@@ -193,7 +189,7 @@ function Setup2FA() {
 
         {step === 'verify' && (
           <div className="setup-step">
-            <h2>✓ Verify Setup</h2>
+            <h2><AiOutlineCheckCircle className="step-icon" /> Verify Setup</h2>
             <p>Enter the 6-digit code from your authenticator app:</p>
 
             <form onSubmit={verifyAndEnable2FA}>
@@ -232,12 +228,12 @@ function Setup2FA() {
 
         {step === 'complete' && (
           <div className="setup-step">
-            <div className="success-checkmark">✓</div>
-            <h2>🎉 2FA Enabled Successfully!</h2>
+            <div className="success-checkmark"><AiOutlineCheckCircle /></div>
+            <h2>2FA Enabled Successfully!</h2>
             <p>Your account is now protected with two-factor authentication.</p>
 
             <div className="backup-codes-section">
-              <h3>⚠️  Save Your Backup Codes</h3>
+              <h3><AiOutlineWarning className="warning-icon" /> Save Your Backup Codes</h3>
               <p>If you lose access to your authenticator, you can use these codes to regain access. Each code can be used once.</p>
 
               <div className="backup-codes-list">
@@ -252,7 +248,7 @@ function Setup2FA() {
                 className="btn btn-secondary"
                 onClick={downloadBackupCodes}
               >
-                📥 Download Backup Codes
+                <AiOutlineDownload className="btn-icon" /> Download Backup Codes
               </button>
             </div>
 

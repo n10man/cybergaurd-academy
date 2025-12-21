@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineArrowLeft, AiOutlineLock } from 'react-icons/ai';
 import { login } from '../services/api';
 import './Login.css';
 
@@ -8,8 +9,13 @@ function Login() {
     email: '',
     password: ''
   });
+  const [twoFACode, setTwoFACode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [requiresTwoFA, setRequiresTwoFA] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -24,96 +30,227 @@ function Login() {
     e.preventDefault();
     setError('');
 
-    console.log('[LOGIN] Form submission');
-
-    // Input validation
     if (!formData.email || !formData.password) {
       const errorMsg = 'Email and password are required';
-      console.warn(`[LOGIN] Validation failed: ${errorMsg}`);
       setError(errorMsg);
       return;
     }
 
-    // Email format validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       const errorMsg = 'Invalid email format';
-      console.warn(`[LOGIN] Invalid email: ${formData.email}`);
       setError(errorMsg);
       return;
     }
 
-    console.log(`[LOGIN] Validation passed for email: ${formData.email}`);
     setLoading(true);
 
     try {
-      console.log('[LOGIN] Sending login request to server...');
       const response = await login(formData.email, formData.password);
       
-      if (response.token) {
-        console.log('[LOGIN] ✅ Login successful, redirecting to 2FA/Dashboard');
+      if (response.requiresTwoFA) {
+        // 2FA is enabled - show 2FA code input
+        console.log('[LOGIN] 2FA required - showing 2FA verification screen');
+        setRequiresTwoFA(true);
+        setPendingUser({
+          userId: response.userId,
+          email: response.email,
+          username: response.username
+        });
+        setError('');
+      } else if (response.requiresSetup2FA) {
+        // User hasn't set up 2FA yet - force setup
+        console.log('[LOGIN] User must set up 2FA before accessing dashboard');
+        localStorage.setItem('user', JSON.stringify({
+          id: response.userId,
+          username: response.username,
+          email: response.email
+        }));
+        localStorage.setItem('token', 'temp-token-for-2fa-setup');
+        navigate('/setup-2fa');
+      } else if (response.token) {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
-        // Navigate to 2FA if needed, otherwise dashboard
         navigate('/dashboard');
       } else {
         const errorMsg = response.message || 'Login failed. Please try again.';
-        console.error(`[LOGIN] No token received: ${errorMsg}`);
         setError(errorMsg);
       }
     } catch (err) {
       const errorMsg = err.message || 'Login failed. Please try again.';
-      console.error(`[LOGIN] ❌ Error: ${errorMsg}`);
       setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
+  const handle2FASubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!twoFACode) {
+      setError('Please enter your 2FA code or backup code');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/verify-2fa-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: pendingUser.userId,
+          verificationCode: twoFACode
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '2FA verification failed');
+      }
+
+      if (data.success && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        if (data.remainingBackupCodes !== undefined) {
+          console.warn(`[LOGIN] Backup code used. ${data.remainingBackupCodes} backup codes remaining.`);
+        }
+        
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || '2FA verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (requiresTwoFA && pendingUser) {
+    return (
+      <div className="login-container">
+        <div className="login-wrapper">
+          <Link 
+            to="#" 
+            className="back-button"
+            onClick={() => {
+              setRequiresTwoFA(false);
+              setPendingUser(null);
+              setTwoFACode('');
+              setFormData({ email: '', password: '' });
+            }}
+          >
+            <AiOutlineArrowLeft />
+            Back
+          </Link>
+          <div className="login-logo">
+            <AiOutlineLock className="logo-lock" />
+          </div>
+          <h1 className="login-title">Two-Factor Authentication</h1>
+          <p className="login-subtitle">Enter your authentication code</p>
+          <p className="login-description">Enter the 6-digit code from your authenticator app or a backup code</p>
+          
+          {error && <div className="error-message">{error}</div>}
+          
+          <form onSubmit={handle2FASubmit} className="login-form">
+            <div className="form-group">
+              <input
+                type="text"
+                value={twoFACode}
+                onChange={(e) => setTwoFACode(e.target.value.toUpperCase())}
+                maxLength="8"
+                placeholder="000000 or XXXXXXXX"
+                className="form-input"
+                autoFocus
+              />
+              <small className="form-help">Enter 6-digit code or 8-character backup code</small>
+            </div>
+            
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? 'Verifying...' : 'Verify'}
+            </button>
+          </form>
+
+          <p className="login-help-text">
+            Lost access to your authenticator? <Link to="/password-recovery" className="forgot-link">Use password recovery</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Login</h2>
+    <div className="login-container">
+      <div className="login-wrapper">
+        <Link to="/" className="back-button">
+          <AiOutlineArrowLeft />
+          Back
+        </Link>
+        <div className="login-logo">
+          <div className="logo-c">C</div>
+        </div>
+        <h1 className="login-title">CyberGuard Academy</h1>
+        <p className="login-subtitle">Welcome back</p>
+        <p className="login-description">Please enter your details to sign in.</p>
+        
         {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit}>
+        
+        <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">Email</label>
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              placeholder="Enter your email"
+              placeholder="Enter your email..."
+              className="form-input"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          
+          <div className="form-group password-group">
             <input
-              type="password"
-              id="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleChange}
               required
               placeholder="Enter your password"
+              className="form-input"
             />
+            <button
+              type="button"
+              className="toggle-password"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+            </button>
           </div>
+          
+          <div className="form-options">
+            <label className="remember-me">
+              <input type="checkbox" />
+              Remember me
+            </label>
+            <Link to="/password-recovery" className="forgot-password">Forgot password?</Link>
+          </div>
+          
           <button type="submit" className="submit-button" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="auth-link">
-          Don't have an account? <Link to="/register">Register here</Link>
+        
+        <p className="signup-text">
+          Don't have an account yet? <Link to="/register" className="signup-link">Sign Up</Link>
         </p>
-        <button onClick={() => navigate('/')} className="back-button" style={{marginTop: '15px', width: '100%', padding: '10px', backgroundColor: '#555', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer'}}>
-          Back to Main Menu
-        </button>
       </div>
     </div>
   );
 }
 
 export default Login;
-
 

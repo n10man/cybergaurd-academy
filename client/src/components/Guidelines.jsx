@@ -19,12 +19,12 @@ Your Mission:
 Learn to identify and filter phishing emails to protect company security.
 
 Step-by-Step Guide:
-1. Talk to HR Manager - She'll brief you on the mission
-2. Visit Senior Dev - Get login credentials from David
-3. Check Sticky Note - The credentials are there
-4. Review Whiteboard - See your progress
-5. Access Main Computer - Use credentials to log in
-6. Complete Email Training - Filter phishing emails to finish
+1. Talk to the HR Manager - She'll brief you on the objectives of your job
+2. Visit Senior Dev - You then proceed to get the login credentials from David
+3. Check Sticky Note - The credentials are on the sticky note on the desk on the top right side of the office
+4. Review Whiteboard - Check the whiteboard to view your progress and how much emails you have left
+5. Access Main Computer - Once you have interacted with the sticky note and the whiteboard, you can access the computer with the login credentials from the sticky note
+6. Complete Email Training - Filter phishing emails in the email client until your inbox is clear to finish your work
 
 Tips:
 - Look for suspicious sender addresses
@@ -37,6 +37,19 @@ Good luck! The security of our company depends on you!
   `;
 
   useEffect(() => {
+    // ✅ Only reset progress on FIRST page load, not on component remount
+    if (!localStorage.getItem('guidelinesInitialized')) {
+      localStorage.setItem('guidelinesInitialized', 'true');
+      localStorage.removeItem('hrInteracted');
+      localStorage.removeItem('seniorDevInteracted');
+      localStorage.removeItem('stickyNoteViewed');
+      localStorage.removeItem('whiteboardInteracted');
+      localStorage.removeItem('computerAccessed');
+      localStorage.removeItem('metSeniorDev');
+      localStorage.removeItem('seniorDevProgress');
+      localStorage.removeItem('gameProgress');
+    }
+    
     updateTasks();
 
     const handleUpdate = () => {
@@ -86,11 +99,27 @@ Good luck! The security of our company depends on you!
 
   const nextIncompleteTask = tasks.find(t => !t.completed);
 
+  const resetProgress = () => {
+    if (window.confirm('Reset all progress? This cannot be undone.')) {
+      localStorage.removeItem('hrInteracted');
+      localStorage.removeItem('seniorDevInteracted');
+      localStorage.removeItem('stickyNoteViewed');
+      localStorage.removeItem('whiteboardInteracted');
+      localStorage.removeItem('computerAccessed');
+      localStorage.removeItem('metSeniorDev');
+      localStorage.removeItem('seniorDevProgress');
+      localStorage.removeItem('gameProgress');
+      localStorage.removeItem('emailState');
+      updateTasks();
+      window.dispatchEvent(new CustomEvent('updateGuidelines', {}));
+    }
+  };
+
   if (isExpanded) {
     return (
       <div className="guidelines-notebook expanded">
         <div className="notebook-header">
-          <h2>📖 Mission Notebook</h2>
+          <h2>Mission Notebook</h2>
           <button className="close-btn" onClick={() => setIsExpanded(false)}>✕</button>
         </div>
         
@@ -106,20 +135,11 @@ Good luck! The security of our company depends on you!
               ></div>
             </div>
           </div>
-
-          <div className="tasks-section">
-            <h3>Checklist:</h3>
-            {tasks.map((task) => (
-              <div key={task.id} className={`task-item-expanded ${task.completed ? 'completed' : 'pending'}`}>
-                <span className="checkbox">{task.completed ? '☑' : '☐'}</span>
-                <span className="task-text">{task.name}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="notebook-footer">
           <p>Click the tab to return to mission overview</p>
+          <button className="reset-progress-btn" onClick={resetProgress}>Reset Progress</button>
         </div>
       </div>
     );
@@ -129,7 +149,7 @@ Good luck! The security of our company depends on you!
     <div className="guidelines-sticky-note">
       <div className="sticky-header">
         <h3>Objectives</h3>
-        <button className="expand-btn" onClick={() => setIsExpanded(true)}>📖 Read More</button>
+        <button className="expand-btn" onClick={() => setIsExpanded(true)}>Read More</button>
       </div>
 
       <div className="sticky-progress">
@@ -158,13 +178,6 @@ Good luck! The security of our company depends on you!
         )}
       </div>
 
-      <div className="sticky-checklist">
-        {tasks.map((task) => (
-          <div key={task.id} className={`mini-check ${task.completed ? 'done' : ''}`}>
-            {task.completed ? '✓' : '•'}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

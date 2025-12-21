@@ -131,7 +131,7 @@ router.post('/register', registerLimiter, registerValidator, async (req, res) =>
     
     // Handle duplicate username/email
     if (error.code === '23505') {
-      console.warn(`[REGISTER] Duplicate username/email: ${email}`);
+      console.warn(`[REGISTER] Duplicate username/email: ${req.body.email}`);
       return res.status(400).json({
         success: false,
         message: 'Username or email already exists'
@@ -322,21 +322,33 @@ router.post('/login', authLimiter, loginValidator, async (req, res, next) => {
       });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+    // Check if user has 2FA enabled
+    const userWithTwoFa = await db.query(
+      'SELECT two_fa_enabled FROM users WHERE id = $1',
+      [user.id]
     );
 
-    res.json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
+    if (!userWithTwoFa.rows[0].two_fa_enabled) {
+      console.warn(`[LOGIN] 2FA not enabled for user: ${email} - forcing 2FA setup`);
+      return res.status(403).json({
+        success: false,
+        requiresSetup2FA: true,
+        message: 'Two-factor authentication is required for your account security',
+        userId: user.id,
         username: user.username,
         email: user.email
-      }
+      });
+    }
+
+    // 2FA is enabled - require 2FA verification before issuing token
+    console.log(`[LOGIN] 2FA enabled for user ${email} - prompting for verification`);
+    res.json({
+      success: true,
+      message: 'Password verified. Please provide your 2FA code.',
+      requiresTwoFA: true,
+      userId: user.id,
+      email: user.email,
+      username: user.username
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -475,9 +487,9 @@ router.post('/verify-2fa', verifyToken, async (req, res) => {
 // Login with 2FA verification
 router.post('/verify-2fa-login', async (req, res) => {
   try {
-    const { userId, verificationCode } = req.body;
+    const { userId, verificationCode, isRecovery } = req.body;
 
-    console.log(`[2FA-LOGIN] Verification attempt - User ID: ${userId}, Time: ${new Date().toISOString()}`);
+    console.log(`[2FA-LOGIN] Verification attempt - User ID: ${userId}, Is Recovery: ${isRecovery}, Time: ${new Date().toISOString()}`);
 
     if (!userId || !verificationCode) {
       console.warn(`[2FA-LOGIN] Missing parameters - User ID: ${userId}, Code provided: ${!!verificationCode}`);
@@ -486,13 +498,13 @@ router.post('/verify-2fa-login', async (req, res) => {
 
     // Get user's 2FA secret
     const result = await db.query(
-      'SELECT id, two_fa_secret, two_fa_backup_codes FROM users WHERE id = $1 AND two_fa_enabled = true',
+      'SELECT id, username, email, two_fa_secret, two_fa_backup_codes FROM users WHERE id = $1',
       [userId]
     );
 
     if (result.rows.length === 0) {
-      console.warn(`[2FA-LOGIN] Invalid user or 2FA not enabled - User ID: ${userId}`);
-      return res.status(401).json({ error: 'Invalid user or 2FA not enabled' });
+      console.warn(`[2FA-LOGIN] Invalid user - User ID: ${userId}`);
+      return res.status(401).json({ error: 'Invalid user' });
     }
 
     const user = result.rows[0];
@@ -516,9 +528,12 @@ router.post('/verify-2fa-login', async (req, res) => {
 
       return res.json({
         message: '2FA verification successful',
+        success: true,
         token,
         user: {
-          id: user.id
+          id: user.id,
+          username: user.username,
+          email: user.email
         }
       });
     }
@@ -544,19 +559,115 @@ router.post('/verify-2fa-login', async (req, res) => {
       );
 
       return res.json({
-        message: '2FA verification successful',
+        message: '2FA verification successful (backup code used)',
+        success: true,
         token,
+        remainingBackupCodes: backupCodes.length,
         user: {
-          id: user.id
+          id: user.id,
+          username: user.username,
+          email: user.email
         }
       });
     }
 
     console.warn(`[2FA-LOGIN] Invalid verification code for user ID: ${userId}`);
-    res.status(401).json({ error: 'Invalid verification code' });
+    res.status(401).json({ error: 'Invalid verification code or backup code' });
   } catch (error) {
     console.error('2FA login verification error:', error);
     res.status(500).json({ error: 'Failed to verify 2FA' });
+  }
+});
+
+// Recover account with 2FA code when password is forgotten
+router.post('/recover-account', async (req, res) => {
+  try {
+    const { email, verificationCode, newPassword } = req.body;
+
+    console.log(`[ACCOUNT-RECOVERY] Attempt - Email: ${email}, Time: ${new Date().toISOString()}`);
+
+    if (!email || !verificationCode || !newPassword) {
+      console.warn(`[ACCOUNT-RECOVERY] Missing parameters for ${email}`);
+      return res.status(400).json({ error: 'Email, verification code, and new password are required' });
+    }
+
+    // Find user by email
+    const userResult = await db.query(
+      'SELECT id, username, two_fa_secret, two_fa_backup_codes, two_fa_enabled FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      console.warn(`[ACCOUNT-RECOVERY] User not found: ${email}`);
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+
+    if (!user.two_fa_enabled) {
+      console.warn(`[ACCOUNT-RECOVERY] 2FA not enabled for user: ${email}`);
+      return res.status(403).json({ error: '2FA is required for account recovery' });
+    }
+
+    // Verify the code is either valid TOTP or valid backup code
+    const isValidTotp = speakeasy.totp.verify({
+      secret: user.two_fa_secret,
+      encoding: 'base32',
+      token: verificationCode,
+      window: 2
+    });
+
+    let isValidBackupCode = false;
+    let backupCodes = JSON.parse(user.two_fa_backup_codes || '[]');
+    const codeIndex = backupCodes.indexOf(verificationCode.toUpperCase());
+    
+    if (codeIndex !== -1) {
+      isValidBackupCode = true;
+      // Remove used backup code
+      backupCodes.splice(codeIndex, 1);
+    }
+
+    if (!isValidTotp && !isValidBackupCode) {
+      console.warn(`[ACCOUNT-RECOVERY] Invalid verification code for ${email}`);
+      return res.status(401).json({ error: 'Invalid 2FA code or backup code' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and backup codes if backup code was used
+    const updateQuery = isValidBackupCode
+      ? 'UPDATE users SET password_hash = $1, two_fa_backup_codes = $2 WHERE id = $3'
+      : 'UPDATE users SET password_hash = $1 WHERE id = $2';
+
+    if (isValidBackupCode) {
+      await db.query(updateQuery, [hashedPassword, JSON.stringify(backupCodes), user.id]);
+    } else {
+      await db.query(updateQuery, [hashedPassword, user.id]);
+    }
+
+    console.log(`[ACCOUNT-RECOVERY] ✅ Password reset for user ${email}`);
+
+    // Generate login token
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Password reset successful. You are now logged in.',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Account recovery error:', error);
+    res.status(500).json({ error: 'Failed to recover account' });
   }
 });
 

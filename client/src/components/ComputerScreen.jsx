@@ -151,13 +151,6 @@ const ComputerScreen = ({ isOpen, onClose }) => {
       }
       // 🚫 Tell the scene that dialogue is now active
       window.dispatchEvent(new CustomEvent('dialogueOpened', { detail: { isOpen: true } }));
-      // Auto-close after 8 seconds (unless it's whiteboard)
-      if (!isWhiteboard) {
-        setTimeout(() => {
-          if (onDialogueClose) onDialogueClose();
-          setDialogue(null);
-        }, 8000);
-      }
     };
 
     const handleCloseDialogue = () => {

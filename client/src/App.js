@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import Setup2FA from './pages/Setup2FA';
+import PasswordRecovery from './pages/PasswordRecovery';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -52,6 +53,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/setup-2fa" element={<Setup2FA />} />
+            <Route path="/password-recovery" element={<PasswordRecovery />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route
               path="/module/:moduleType"
