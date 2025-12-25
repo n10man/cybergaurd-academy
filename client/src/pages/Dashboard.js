@@ -5,12 +5,31 @@ import EmailClient from '../components/EmailClient';
 import ComputerScreen from '../components/ComputerScreen';
 import StickyNote from '../components/StickyNote';
 import Guidelines from '../components/Guidelines';
+import { SAFE_EMAILS, PHISHING_EMAILS } from '../data/emailData';
 import './Dashboard.css';
 
 function Dashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [showEmailClient, setShowEmailClient] = React.useState(false);
+
+  // Initialize email state on dashboard load so whiteboard shows correct count before login
+  React.useEffect(() => {
+    // Only initialize if not already set
+    if (!localStorage.getItem('emailState')) {
+      const realEmailsCount = SAFE_EMAILS.length;
+      const phishingEmailsCount = PHISHING_EMAILS.length;
+      const totalEmails = realEmailsCount + phishingEmailsCount;
+      
+      localStorage.setItem('emailState', JSON.stringify({
+        inboxCount: totalEmails,
+        safeCount: 0,
+        phishingCount: 0,
+        totalProcessed: 0
+      }));
+      console.log('📧 Initialized email state:', { inboxCount: totalEmails });
+    }
+  }, []);
 
   React.useEffect(() => {
     const handleOpenEmailClient = () => {
