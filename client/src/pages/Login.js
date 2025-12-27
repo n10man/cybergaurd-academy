@@ -9,6 +9,7 @@ function Login() {
     email: '',
     password: ''
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [twoFACode, setTwoFACode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,15 @@ function Login() {
   const [pendingUser, setPendingUser] = useState(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
+
+  // Load saved email on component mount
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberMeEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -70,6 +80,14 @@ function Login() {
       } else if (response.token) {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
+        
+        // Save email if remember me is checked
+        if (rememberMe) {
+          localStorage.setItem('rememberMeEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberMeEmail');
+        }
+        
         navigate('/dashboard');
       } else {
         const errorMsg = response.message || 'Login failed. Please try again.';
@@ -233,7 +251,11 @@ function Login() {
           
           <div className="form-options">
             <label className="remember-me">
-              <input type="checkbox" />
+              <input 
+                type="checkbox" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               Remember me
             </label>
             <Link to="/password-recovery" className="forgot-password">Forgot password?</Link>

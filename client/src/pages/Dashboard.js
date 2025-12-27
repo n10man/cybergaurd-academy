@@ -15,8 +15,8 @@ function Dashboard() {
 
   // Initialize email state on dashboard load so whiteboard shows correct count before login
   React.useEffect(() => {
-    // Only initialize if not already set
-    if (!localStorage.getItem('emailState')) {
+    // Always reinitialize emailState if this is a fresh game session
+    if (!localStorage.getItem('emailStateInitialized')) {
       const realEmailsCount = SAFE_EMAILS.length;
       const phishingEmailsCount = PHISHING_EMAILS.length;
       const totalEmails = realEmailsCount + phishingEmailsCount;
@@ -27,6 +27,7 @@ function Dashboard() {
         phishingCount: 0,
         totalProcessed: 0
       }));
+      localStorage.setItem('emailStateInitialized', 'true');
       console.log('📧 Initialized email state:', { inboxCount: totalEmails });
     }
   }, []);
@@ -41,8 +42,8 @@ function Dashboard() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Clear ALL localStorage to reset for next login
+    localStorage.clear();
     navigate('/');
   };
 

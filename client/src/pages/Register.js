@@ -48,6 +48,7 @@ function Register() {
   const passwordStrength = validatePassword(formData.password);
 
   const handleCaptchaChange = (token) => {
+    console.log('[REGISTER] CAPTCHA token received:', token ? '✓ Token set' : '✗ No token');
     setCaptchaToken(token);
     setError('');
   };
@@ -138,9 +139,13 @@ function Register() {
     } catch (err) {
       let errorMsg = err.message || 'Registration failed. Please try again.';
       
+      console.log('[REGISTER] Caught error:', errorMsg);
+      
       // Check if it's a duplicate email/username error
       if (errorMsg.includes('already exists')) {
         errorMsg = 'Email or username already in use. Please head to the login page.';
+      } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('Failed to connect')) {
+        errorMsg = 'Could not connect to server. Please try again.';
       }
       
       console.error(`[REGISTER] ❌ Error: ${errorMsg}`);
@@ -282,7 +287,7 @@ function Register() {
           <div className="form-group captcha-group">
             <ReCAPTCHA
               ref={recaptchaRef}
-              sitekey="6LfwRC0sAAAAAI4uY5mHJ699kTPFnNeZVrNz9sbh"
+              sitekey="6LeXHDgsAAAAAD5vDJ19_yJslWa-kgekAoi0CpnJ"
               onChange={handleCaptchaChange}
               theme="dark"
             />

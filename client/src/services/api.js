@@ -26,14 +26,26 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError);
+      throw new Error('Server returned invalid response');
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || 'Request failed');
+      const errorMessage = data.message || data.error || 'Request failed';
+      console.error(`API Error [${response.status}]: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Failed to connect to server. Please check your connection.');
+    }
     if (error.message) {
       throw error;
     }
@@ -50,10 +62,18 @@ export const login = async (email, password) => {
 };
 
 export const register = async (username, email, password, captchaToken) => {
-  return apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ username, email, password, captchaToken }),
-  });
+  console.log('[API] Calling /auth/register');
+  try {
+    const result = await apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password, captchaToken }),
+    });
+    console.log('[API] Register response:', result);
+    return result;
+  } catch (error) {
+    console.error('[API] Register error caught:', error.message);
+    throw error;
+  }
 };
 
 export const verifyToken = async () => {

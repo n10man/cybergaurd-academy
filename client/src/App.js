@@ -34,6 +34,7 @@ function App() {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('gameProgress');
+      localStorage.removeItem('gameStarted'); // Reset game progress flag too
       localStorage.setItem('appInitialized', 'true');
     }
   }, []);

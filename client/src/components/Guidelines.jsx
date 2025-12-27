@@ -37,9 +37,11 @@ Good luck! The security of our company depends on you!
   `;
 
   useEffect(() => {
-    // ✅ Only reset progress on FIRST page load, not on component remount
-    if (!localStorage.getItem('guidelinesInitialized')) {
-      localStorage.setItem('guidelinesInitialized', 'true');
+    // ✅ Reset progress on FIRST page load (new user or new session)
+    // Only reset if user is truly new to the game
+    if (!localStorage.getItem('gameStarted')) {
+      localStorage.setItem('gameStarted', 'true');
+      // Clear all progress tracking (but NOT emailState - that's managed by Dashboard)
       localStorage.removeItem('hrInteracted');
       localStorage.removeItem('seniorDevInteracted');
       localStorage.removeItem('stickyNoteViewed');
@@ -47,7 +49,15 @@ Good luck! The security of our company depends on you!
       localStorage.removeItem('computerAccessed');
       localStorage.removeItem('metSeniorDev');
       localStorage.removeItem('seniorDevProgress');
-      localStorage.removeItem('gameProgress');
+      console.log('🎮 Fresh game session started - progress reset to 0%');
+      console.log('📍 Cleared flags:', {
+        gameStarted: false,
+        hrInteracted: false,
+        seniorDevInteracted: false,
+        stickyNoteViewed: false,
+        whiteboardInteracted: false,
+        computerAccessed: false
+      });
     }
     
     updateTasks();
@@ -81,11 +91,32 @@ Good luck! The security of our company depends on you!
           completed = localStorage.getItem('computerAccessed') === 'true';
           break;
         case 'emails':
-          const emailState = JSON.parse(localStorage.getItem('emailState') || '{}');
-          completed = emailState.inboxCount === 0;
+          // Only mark as complete if:
+          // 1. User has accessed the computer (logged in)
+          // 2. AND all emails are processed (inboxCount === 0)
+          const hasAccessedComputer = localStorage.getItem('computerAccessed') === 'true';
+          const emailStateStr = localStorage.getItem('emailState');
+          
+          if (hasAccessedComputer && emailStateStr) {
+            try {
+              const emailState = JSON.parse(emailStateStr);
+              completed = emailState.inboxCount === 0;
+              console.log(`📧 Email task: computerAccessed=${hasAccessedComputer}, inboxCount=${emailState.inboxCount}, completed=${completed}`);
+            } catch (e) {
+              console.error('❌ Failed to parse emailState:', e);
+              completed = false;
+            }
+          } else {
+            console.log(`📧 Email task: computerAccessed=${hasAccessedComputer}, hasEmailState=${!!emailStateStr} - NOT COMPLETE YET`);
+            completed = false;
+          }
           break;
         default:
           break;
+      }
+
+      if (completed) {
+        console.log(`✅ Task "${task.id}" marked as COMPLETED`);
       }
 
       return { ...task, completed };

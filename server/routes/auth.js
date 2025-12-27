@@ -412,10 +412,19 @@ router.get('/verify', async (req, res, next) => {
 // Setup 2FA - Generate secret and QR code
 router.get('/setup-2fa', verifyToken, async (req, res) => {
   try {
-    // Generate secret
+    // Get user email from database
+    const userResult = await db.query('SELECT email FROM users WHERE id = $1', [req.userId]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const userEmail = userResult.rows[0].email;
+    
+    // Generate secret with proper issuer and account name
     const secret = speakeasy.generateSecret({
-      name: `CyberGuard Academy (${req.userId})`,
-      issuer: 'CyberGuard Academy',
+      name: `CyberGuard (${userEmail})`,
+      issuer: 'CyberGuard',
       length: 32
     });
 
