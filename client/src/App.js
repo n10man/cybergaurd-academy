@@ -25,21 +25,16 @@ function ModulePage() {
 }
 
 function App() {
+  // Clear any residual dev/test tokens on app startup for a fresh start
   React.useEffect(() => {
-    // 🚀 DEVELOPMENT: Skip login and go directly to dashboard
-    const isDevelopment = true; // Set to false to enable login
-    if (isDevelopment && window.location.pathname === '/') {
-      // Set mock user and token for testing
-      if (!localStorage.getItem('token')) {
-        localStorage.setItem('token', 'dev-token-12345');
-        localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          username: 'DevUser',
-          email: 'dev@test.com'
-        }));
-        localStorage.setItem('gameProgress', 'start');
-      }
-      window.location.href = '/dashboard';
+    // Only run once on mount
+    const isFirstLoad = !localStorage.getItem('appInitialized');
+    if (isFirstLoad) {
+      // Clear any dev/test data to ensure fresh start
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('gameProgress');
+      localStorage.setItem('appInitialized', 'true');
     }
   }, []);
 

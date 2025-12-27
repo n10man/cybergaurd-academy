@@ -229,6 +229,39 @@
   background: #000000;
 }
 
+.error-message-box {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  color: #c33;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.error-message-box p {
+  margin: 0 0 10px 0;
+}
+
+.error-link {
+  display: inline-block;
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.error-link:hover {
+  color: #0052a3;
+  background: #e8e8e8;
+}
+
+
 
 
 

@@ -136,7 +136,13 @@ function Register() {
         setError(errorMsg);
       }
     } catch (err) {
-      const errorMsg = err.message || 'Registration failed. Please try again.';
+      let errorMsg = err.message || 'Registration failed. Please try again.';
+      
+      // Check if it's a duplicate email/username error
+      if (errorMsg.includes('already exists')) {
+        errorMsg = 'Email or username already in use. Please head to the login page.';
+      }
+      
       console.error(`[REGISTER] ❌ Error: ${errorMsg}`);
       console.error('[REGISTER] Stack:', err.stack);
       setError(errorMsg);
@@ -175,7 +181,16 @@ function Register() {
           </div>
         ) : (
           <>
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+              <div className="error-message-box">
+                <p>{error}</p>
+                {error.includes('already in use') && (
+                  <Link to="/login" className="error-link">
+                    Go to Login Page →
+                  </Link>
+                )}
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
