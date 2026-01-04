@@ -1,10 +1,10 @@
-# CyberGuard Academy
+# 🛡️ CyberGuard Academy
 
 A fun, interactive cybersecurity training game that teaches you how to spot phishing emails, stay safe online, and level up your security skills!
 
 ---
 
-## What Is This?
+## 🎮 What Is This?
 
 **CyberGuard Academy** is a game where you learn real cybersecurity skills by:
 - Walking around a virtual office as a character
@@ -17,7 +17,7 @@ Think of it like a video game mixed with a security training course!
 
 ---
 
-## Quick Start (5 minutes)
+## ⚡ Quick Start (5 minutes)
 
 ### What You Need
 - **Windows**, **Mac**, or **Linux** computer
@@ -57,7 +57,7 @@ This will:
 
 ---
 
-## How to Play
+## 🎯 How to Play
 
 ### Controls
 | Action | Key |
@@ -88,7 +88,7 @@ When an NPC gives you the email challenge:
 
 ---
 
-## Setup With User Accounts (Advanced)
+## 🔧 Setup With User Accounts (Advanced)
 
 The basic game works offline, but if you want user accounts, login, and progress tracking, follow these steps:
 
@@ -154,15 +154,15 @@ npm start
 ```
 
 Now the game has:
-- User registration and login
-- Email verification
-- Two-factor authentication (2FA)
-- Progress tracking
-- Score saving
+- ✅ User registration and login
+- ✅ Email verification
+- ✅ Two-factor authentication (2FA)
+- ✅ Progress tracking
+- ✅ Score saving
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 Here's where everything is:
 
@@ -186,7 +186,7 @@ cybergaurd-academy/
 
 ---
 
-## Common Commands
+## 🚀 Common Commands
 
 ### Run the Game
 ```bash
@@ -216,7 +216,7 @@ npm start
 
 ---
 
-## Troubleshooting
+## ❓ Troubleshooting
 
 ### "npm: command not found"
 - **Solution**: Install Node.js from https://nodejs.org
@@ -245,32 +245,32 @@ npm start
 
 ---
 
-## What You'll Learn
+## 🎓 What You'll Learn
 
 Playing through CyberGuard Academy teaches you:
 
-- **Phishing Detection** - Spot fake emails trying to steal your password
-- **Social Engineering** - Understand how attackers manipulate people
-- **Password Security** - Why strong passwords matter
-- **Email Red Flags** - Suspicious sender addresses, urgent language, etc.
-- **2-Factor Authentication** - Adding an extra layer of security
-- **Safe Online Practices** - General cybersecurity best practices  
+✅ **Phishing Detection** - Spot fake emails trying to steal your password
+✅ **Social Engineering** - Understand how attackers manipulate people
+✅ **Password Security** - Why strong passwords matter
+✅ **Email Red Flags** - Suspicious sender addresses, urgent language, etc.
+✅ **2-Factor Authentication** - Adding an extra layer of security
+✅ **Safe Online Practices** - General cybersecurity best practices  
 
 ---
 
-## Features
+## 📱 Features
 
-- **Interactive Game World** - Walk around an office and talk to NPCs
-- **Email Training** - Learn to identify phishing emails
-- **Point System** - Earn points for correct decisions
-- **User Accounts** - Save your progress (optional)
-- **Security Features** - 2FA, password hashing, CAPTCHA
-- **Expandable Maps** - Add new areas and challenges
-- **Progress Tracking** - See how much you've learned
+- 🎮 **Interactive Game World** - Walk around an office and talk to NPCs
+- 📧 **Email Training** - Learn to identify phishing emails
+- 🎯 **Point System** - Earn points for correct decisions
+- 👥 **User Accounts** - Save your progress (optional)
+- 🔐 **Security Features** - 2FA, password hashing, CAPTCHA
+- 🗺️ **Expandable Maps** - Add new areas and challenges
+- 📊 **Progress Tracking** - See how much you've learned
 
 ---
 
-## Technology Used
+## 🛠️ Technology Used
 
 **Frontend (The Game)**
 - React - User interface
@@ -286,13 +286,13 @@ Playing through CyberGuard Academy teaches you:
 
 ---
 
-## License
+## 📝 License
 
 This project is [add your license type here - e.g., MIT, Apache 2.0]
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Want to help? You can:
 - Report bugs on GitHub
@@ -303,7 +303,7 @@ Want to help? You can:
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 **Q: Do I need to create an account to play?**  
 A: No! The game works without an account. Creating an account is optional if you want to save your progress.
@@ -322,15 +322,15 @@ A: Yes! The lessons are based on real cybersecurity practices and threats.
 
 ---
 
-## Support
+## 📞 Support
 
-- Email: [add your email]
-- Discord: [add your Discord link]
-- GitHub Issues: [add GitHub issues link]
+- 📧 Email: [add your email]
+- 💬 Discord: [add your Discord link]
+- 🐛 GitHub Issues: [add GitHub issues link]
 
 ---
 
-## Ready to Play?
+## 🎉 Ready to Play?
 
 Run these commands and you're done:
 
@@ -340,7 +340,7 @@ npm install
 npm start
 ```
 
-Enjoy learning and have fun saving the office from cybersecurity threats!
+Enjoy learning and have fun saving the office from cybersecurity threats! 🛡️
 
 ---
 
