@@ -255,11 +255,6 @@ npm start
 
 ---
 
-## License
-
-This project is [add your license type here - e.g., MIT, Apache 2.0]
-
----
 
 ## Contributing
 
@@ -274,8 +269,6 @@ Want to help? You can:
 
 ## FAQ
 
-**Q: Do I need an account to play?**  
-A: No, the game works offline. Accounts are optional for saving progress.
 
 **Q: How long does it take to complete?**  
 A: About 20-30 minutes depending on how you play.
@@ -283,8 +276,6 @@ A: About 20-30 minutes depending on how you play.
 **Q: Will this make me an expert at spotting phishing?**  
 A: This covers the basics and common tactics. Real phishing can be sophisticated, so always stay cautious.
 
-**Q: Can I add my own emails to the game?**  
-A: Yes! The code is open source. You can edit email data and add custom scenarios.
 
 ---
 
