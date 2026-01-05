@@ -1,4 +1,4 @@
-import api from '../services/api';
+import { getUserProgress, saveUserProgress } from '../services/api';
 
 /**
  * Load user progress from API
@@ -7,8 +7,8 @@ import api from '../services/api';
  */
 export const loadProgress = async (userId) => {
   try {
-    const response = await api.get(`/progress/${userId}`);
-    return response.data;
+    const response = await getUserProgress(userId);
+    return response;
   } catch (error) {
     console.error('Error loading progress:', error);
     throw error;
@@ -23,8 +23,8 @@ export const loadProgress = async (userId) => {
  */
 export const saveProgress = async (userId, progressData) => {
   try {
-    const response = await api.post(`/progress/${userId}`, progressData);
-    return response.data;
+    const response = await saveUserProgress({ userId, ...progressData });
+    return response;
   } catch (error) {
     console.error('Error saving progress:', error);
     throw error;

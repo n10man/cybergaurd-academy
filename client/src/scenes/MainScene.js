@@ -41,6 +41,8 @@ class MainScene extends Phaser.Scene {
     const savedProgress = localStorage.getItem('gameProgress');
     this.gameProgress = savedProgress || 'start'; // Progression states: start → hr_welcome → hr_whiteboard → senior_dev → unlocked
     this.isDialogueActive = false; // 🚫 Lock movement during dialogue
+    this.lastSaveTime = 0; // ⏱️ Auto-save timer (save every 10 seconds)
+    this.SAVE_INTERVAL = 10000; // 10 seconds
   }
 
   preload() {
@@ -95,17 +97,36 @@ class MainScene extends Phaser.Scene {
   create() {
     console.log(`🗺️ MainScene: Creating Level -> ${CURRENT_LEVEL}`);
     
-    // 🔄 Reset all progress on new game start
-    localStorage.removeItem('hrInteracted');
-    localStorage.removeItem('seniorDevInteracted');
-    localStorage.removeItem('stickyNoteViewed');
-    localStorage.removeItem('whiteboardInteracted');
-    localStorage.removeItem('computerAccessed');
-    localStorage.removeItem('metSeniorDev');
-    localStorage.removeItem('seniorDevProgress');
-    localStorage.removeItem('gameProgress');
-    localStorage.setItem('gameProgress', 'start');
-    localStorage.setItem('seniorDevProgress', 'first');
+    // 🔄 Check if we have saved progress in localStorage
+    const existingProgress = localStorage.getItem('gameProgress');
+    const progressLoadedFromDB = localStorage.getItem('progressLoadedFromDB') === 'true';
+    
+    console.log(`📊 Progress state check:`);
+    console.log(`   existingProgress: ${existingProgress}`);
+    console.log(`   progressLoadedFromDB: ${progressLoadedFromDB}`);
+    
+    if (!existingProgress || existingProgress === 'start') {
+      // No saved progress or fresh start - reset everything
+      localStorage.removeItem('hrInteracted');
+      localStorage.removeItem('seniorDevInteracted');
+      localStorage.removeItem('stickyNoteViewed');
+      localStorage.removeItem('whiteboardInteracted');
+      localStorage.removeItem('computerAccessed');
+      localStorage.removeItem('metSeniorDev');
+      localStorage.removeItem('seniorDevProgress');
+      localStorage.setItem('gameProgress', 'start');
+      localStorage.setItem('seniorDevProgress', 'first');
+      this.gameProgress = 'start';
+      console.log('🎮 Starting fresh game - all progress cleared');
+    } else {
+      // We have saved progress - keep it!
+      this.gameProgress = existingProgress;
+      console.log(`🎮 Restored game progress: ${existingProgress}`);
+    }
+    
+    if (progressLoadedFromDB) {
+      localStorage.removeItem('progressLoadedFromDB'); // Only use this flag once
+    }
     
     this.physics.world.TILE_BIAS = 48;
 
@@ -357,9 +378,41 @@ class MainScene extends Phaser.Scene {
         g.destroy();
     }
 
-    // Default Spawn (Server Room)
-    const startX = this.spawnX || 220; 
-    const startY = this.spawnY || 480;
+    // Default Spawn (Server Room) - or restore from saved position
+    let startX = this.spawnX || 220; 
+    let startY = this.spawnY || 480;
+
+    // If progress was loaded from DB, restore player position
+    const savedPositionX = localStorage.getItem('lastPositionX');
+    const savedPositionY = localStorage.getItem('lastPositionY');
+    
+    console.log(`🔍 Position Restoration Debug:`);
+    console.log(`   typeof savedPositionX: ${typeof savedPositionX}`);
+    console.log(`   typeof savedPositionY: ${typeof savedPositionY}`);
+    console.log(`   savedPositionX === null: ${savedPositionX === null}`);
+    console.log(`   savedPositionY === null: ${savedPositionY === null}`);
+    console.log(`   savedPositionX value: "${savedPositionX}"`);
+    console.log(`   savedPositionY value: "${savedPositionY}"`);
+    console.log(`   truthiness - savedPositionX: ${!!savedPositionX}, savedPositionY: ${!!savedPositionY}`);
+    
+    if (savedPositionX && savedPositionY) {
+      const posX = parseFloat(savedPositionX);
+      const posY = parseFloat(savedPositionY);
+      
+      console.log(`   Parsed values - posX: ${posX}, posY: ${posY}`);
+      console.log(`   isNaN checks - posX: ${isNaN(posX)}, posY: ${isNaN(posY)}`);
+      
+      // Validate that the parsed values are valid numbers
+      if (!isNaN(posX) && !isNaN(posY) && posX > 0 && posY > 0) {
+        startX = posX;
+        startY = posY;
+        console.log(`✅ Restored player position: ${startX}, ${startY}`);
+      } else {
+        console.warn(`⚠️ Invalid position values - using default spawn: X=${posX}, Y=${posY}`);
+      }
+    } else {
+      console.log(`📍 Using default spawn position: ${startX}, ${startY} (no saved positions found)`);
+    }
 
     this.player = this.physics.add.sprite(startX, startY, 'player_character');
     this.player.setDepth(10);
@@ -592,11 +645,85 @@ class MainScene extends Phaser.Scene {
     });
   }
 
-  // 💾 Save game progress to localStorage
+  // 💾 Save game progress to localStorage and database
   saveProgress(newProgress) {
     this.gameProgress = newProgress;
     localStorage.setItem('gameProgress', newProgress);
     console.log(`💾 Game progress saved: ${newProgress}`);
+    
+    // Also save to database if user is logged in
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.id) {
+      this.syncProgressToDatabase();
+    }
+  }
+
+  // 💾 Sync current progress to database
+  async syncProgressToDatabase() {
+    try {
+      let userId = null;
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Try to get user ID from localStorage first
+      if (user.id) {
+        userId = user.id;
+      } else {
+        // If not in localStorage, try to extract from JWT token
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            // Decode JWT without verification (just for getting userId)
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload.userId;
+            console.log(`🔐 Extracted user ID from token: ${userId}`);
+          } catch (e) {
+            console.warn('⚠️ Could not extract user ID from token:', e);
+          }
+        }
+      }
+
+      if (!userId) {
+        console.warn('⚠️ No user ID found in localStorage or token, skipping sync');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('⚠️ No token found, skipping sync');
+        return;
+      }
+
+      const progressData = {
+        current_level: this.gameProgress,
+        completed_modules: [],
+        badges_earned: [],
+        total_points: 0,
+        last_position_x: this.player?.x || this.spawnX,
+        last_position_y: this.player?.y || this.spawnY
+      };
+
+      console.log(`💾 Syncing progress for user ${userId}:`, progressData);
+
+      const response = await fetch(`http://localhost:5000/api/progress/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(progressData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`❌ Failed to sync progress to database - Status: ${response.status}, Response: ${errorText}`);
+      } else {
+        const data = await response.json();
+        console.log('✅ Progress synced to database:', data);
+      }
+    } catch (error) {
+      console.warn('❌ Error syncing progress to database:', error);
+      // Don't throw - let the game continue even if sync fails
+    }
   }
 
   isKeyJustPressed(code) {
@@ -605,6 +732,24 @@ class MainScene extends Phaser.Scene {
 
   update() {
     if (!this.player) return;
+
+    // ⏱️ Auto-save progress periodically
+    const currentTime = Date.now();
+    if (currentTime - this.lastSaveTime > this.SAVE_INTERVAL) {
+      this.lastSaveTime = currentTime;
+      console.log(`\n⏱️⏱️⏱️ AUTO-SAVE TRIGGERED ⏱️⏱️⏱️`);
+      console.log(`📊 User: ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).id : 'NONE'}`);
+      console.log(`🎮 Progress: ${this.gameProgress}`);
+      // Save position to localStorage as backup (in case page refreshes before DB syncs)
+      const posX = Math.round(this.player.x);
+      const posY = Math.round(this.player.y);
+      localStorage.setItem('lastPositionX', posX);
+      localStorage.setItem('lastPositionY', posY);
+      console.log(`📍 Saved player position to localStorage: ${posX}, ${posY}`);
+      console.log(`   Verification - lastPositionX now in localStorage: ${localStorage.getItem('lastPositionX')}`);
+      console.log(`   Verification - lastPositionY now in localStorage: ${localStorage.getItem('lastPositionY')}`);
+      this.syncProgressToDatabase();
+    }
 
     // Check if an input field is focused - if so, skip keyboard game controls
     const activeElement = document.activeElement;

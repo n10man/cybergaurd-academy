@@ -41,30 +41,45 @@ router.get('/:userId', verifyToken, async (req, res, next) => {
       });
     }
 
+    console.log(`📥 [PROGRESS] Loading progress for user ${userId}`);
+
     // Get user progress
     const result = await db.query(
       'SELECT * FROM user_progress WHERE user_id = $1 ORDER BY last_updated DESC',
       [userId]
     );
 
+    console.log(`✅ [PROGRESS] Found ${result.rows.length} progress record(s) for user ${userId}`);
+
     res.json({
       userId: parseInt(userId),
       progress: result.rows
     });
   } catch (error) {
-    console.error('Get progress error:', error);
+    console.error('❌ [PROGRESS] Get progress error:', error);
     next(error);
   }
 });
 
 // Save user progress
-router.post('/save', verifyToken, async (req, res, next) => {
+router.post('/:userId', verifyToken, async (req, res, next) => {
   try {
-    const { userId, current_level, completed_modules, badges_earned, total_points, last_position_x, last_position_y } = req.body;
+    const { userId } = req.params;
+    const { current_level, completed_modules, badges_earned, total_points, last_position_x, last_position_y } = req.body;
     const authenticatedUserId = req.userId;
+
+    console.log(`\n💾 [PROGRESS] Saving progress for user ${userId}:`, {
+      current_level,
+      completed_modules,
+      total_points,
+      last_position_x,
+      last_position_y,
+      authenticatedUserId
+    });
 
     // Validation
     if (!userId) {
+      console.log(`❌ [PROGRESS] userId is required`);
       return res.status(400).json({ 
         error: 'userId is required' 
       });
@@ -72,10 +87,13 @@ router.post('/save', verifyToken, async (req, res, next) => {
 
     // Verify user can only save their own progress
     if (parseInt(userId) !== parseInt(authenticatedUserId)) {
+      console.log(`❌ [PROGRESS] Auth check failed: ${userId} !== ${authenticatedUserId}`);
       return res.status(403).json({ 
         error: 'Access denied. You can only save your own progress.' 
       });
     }
+
+    console.log(`✅ [PROGRESS] Auth check passed, checking for existing record...`);
 
     // Check if progress record exists
     const existingProgress = await db.query(
@@ -83,9 +101,12 @@ router.post('/save', verifyToken, async (req, res, next) => {
       [userId]
     );
 
+    console.log(`📊 [PROGRESS] Found ${existingProgress.rows.length} existing progress record(s)`);
+
     let result;
 
     if (existingProgress.rows.length > 0) {
+      console.log(`🔄 [PROGRESS] Updating existing progress record...`);
       // Update existing progress
       result = await db.query(
         `UPDATE user_progress 
@@ -100,8 +121,8 @@ router.post('/save', verifyToken, async (req, res, next) => {
          RETURNING *`,
         [
           current_level || null,
-          completed_modules ? JSON.stringify(completed_modules) : null,
-          badges_earned ? JSON.stringify(badges_earned) : null,
+          typeof completed_modules === 'string' ? completed_modules : JSON.stringify(completed_modules || []),
+          typeof badges_earned === 'string' ? badges_earned : JSON.stringify(badges_earned || []),
           total_points || 0,
           last_position_x || null,
           last_position_y || null,
@@ -109,6 +130,7 @@ router.post('/save', verifyToken, async (req, res, next) => {
         ]
       );
     } else {
+      console.log(`➕ [PROGRESS] Creating new progress record...`);
       // Insert new progress
       result = await db.query(
         `INSERT INTO user_progress 
@@ -118,8 +140,8 @@ router.post('/save', verifyToken, async (req, res, next) => {
         [
           userId,
           current_level || null,
-          completed_modules ? JSON.stringify(completed_modules) : null,
-          badges_earned ? JSON.stringify(badges_earned) : null,
+          typeof completed_modules === 'string' ? completed_modules : JSON.stringify(completed_modules || []),
+          typeof badges_earned === 'string' ? badges_earned : JSON.stringify(badges_earned || []),
           total_points || 0,
           last_position_x || null,
           last_position_y || null
@@ -131,8 +153,10 @@ router.post('/save', verifyToken, async (req, res, next) => {
       message: 'Progress saved successfully',
       progress: result.rows[0]
     });
+
+    console.log(`✅ [PROGRESS] Progress saved successfully for user ${userId}`);
   } catch (error) {
-    console.error('Save progress error:', error);
+    console.error('❌ [PROGRESS] Save progress error:', error);
     
     // Handle JSON parsing errors
     if (error.code === '22007' || error.message.includes('invalid input')) {

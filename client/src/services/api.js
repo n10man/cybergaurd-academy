@@ -96,7 +96,7 @@ export const getUserProgress = async (userId) => {
 };
 
 export const saveUserProgress = async (progressData) => {
-  return apiRequest('/progress/save', {
+  return apiRequest(`/progress/${progressData.userId}`, {
     method: 'POST',
     body: JSON.stringify(progressData),
   });

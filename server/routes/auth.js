@@ -529,6 +529,22 @@ router.post('/verify-2fa-login', async (req, res) => {
     if (isValidTotp) {
       // Valid TOTP code - generate login token
       console.log(`[2FA-LOGIN] ✅ Valid TOTP code for user ID: ${userId}`);
+      
+      // Ensure user has a progress record
+      const existingProgress = await db.query(
+        'SELECT id FROM user_progress WHERE user_id = $1',
+        [user.id]
+      );
+
+      if (existingProgress.rows.length === 0) {
+        await db.query(
+          `INSERT INTO user_progress (user_id, current_level, completed_modules, badges_earned, total_points, last_position_x, last_position_y)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [user.id, 'start', '[]', '[]', 0, 50, 515]
+        );
+        console.log(`[2FA-LOGIN] 📊 Created progress record for user ID: ${userId}`);
+      }
+
       const token = jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET,
@@ -560,6 +576,21 @@ router.post('/verify-2fa-login', async (req, res) => {
         'UPDATE users SET two_fa_backup_codes = $1 WHERE id = $2',
         [JSON.stringify(backupCodes), userId]
       );
+
+      // Ensure user has a progress record
+      const existingProgress = await db.query(
+        'SELECT id FROM user_progress WHERE user_id = $1',
+        [user.id]
+      );
+
+      if (existingProgress.rows.length === 0) {
+        await db.query(
+          `INSERT INTO user_progress (user_id, current_level, completed_modules, badges_earned, total_points, last_position_x, last_position_y)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [user.id, 'start', '[]', '[]', 0, 50, 515]
+        );
+        console.log(`[2FA-LOGIN] 📊 Created progress record for user ID: ${userId}`);
+      }
 
       const token = jwt.sign(
         { userId: user.id },
