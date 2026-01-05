@@ -117,8 +117,11 @@ function Dashboard() {
   }, []);
 
   const handleLogout = () => {
-    // Clear ALL localStorage to reset for next login
-    localStorage.clear();
+    // Only clear auth-related data, keep game progress for next login
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('progressLoadedFromDB');
+    // Keep game progress/position so it can be restored on next login
     navigate('/');
   };
 
