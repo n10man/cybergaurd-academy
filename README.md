@@ -1,303 +1,49 @@
 # CyberGuard Academy
 
-An interactive game where you learn to identify and eliminate phishing emails.
+A gamified cybersecurity awareness training platform that teaches everyday people how to spot phishing attacks through interactive gameplay.
 
----
+## About the Project
 
-## What Is This?
+CyberGuard Academy is my Final Year Project — a web-based platform that proves cybersecurity training doesn't have to be boring. Instead of corporate slide decks, users explore a 2D top-down office environment built with Phaser 3, interact with NPCs like an HR Manager and a Senior Developer, and complete a phishing email classification challenge where they learn to distinguish real emails from malicious ones.
 
-CyberGuard Academy is a cybersecurity training game focused on one core skill: **identifying phishing emails**. You explore an office environment, talk to NPCs, and complete email classification challenges to earn points.
+The core inspiration came from realizing that most cybersecurity tools are built for technical users. Nobody teaches everyday office workers how to protect themselves against the threats that actually target them. Phishing is statistically the most common entry point for breaches, yet awareness training is often dry, forgettable, and disconnected from reality. I built CyberGuard Academy to change that by making security training feel like a game rather than a chore.
 
-It's a fun, gamified way to learn how to spot fake emails trying to trick you.
+The experience combines narrative-driven gameplay with hands-on learning. You walk through an office, talk to NPCs who explain security concepts, collect credentials, and then face a real challenge: process your inbox and identify phishing emails while real ones slip through and cost you points. It's immediate, it's engaging, and it actually teaches something valuable.
 
----
+## Tech Stack
 
-## Quick Start (5 minutes)
-
-### What You Need
-- Windows, Mac, or Linux computer
-- Node.js installed (download from https://nodejs.org - choose the LTS version)
-
-### Step 1: Download the Project
-
-**Option A: Using Git**
-```bash
-git clone https://github.com/n10man/cybergaurd-academy.git
-cd cybergaurd-academy
-```
-
-**Option B: Download as ZIP**
-- Click the green "Code" button on GitHub and select "Download ZIP"
-- Unzip the folder
-- Open a terminal and navigate to the folder
-
-### Step 2: Start the Game
-
-```bash
-cd client
-npm install
-npm start
-```
-
-The game will open at http://localhost:3000. Start playing immediately!
-
----
-
-## How to Play
-
-### Controls
-| Action | Key |
-|--------|-----|
-| Move Up | W or Up Arrow |
-| Move Down | S or Down Arrow |
-| Move Left | A or Left Arrow |
-| Move Right | D or Right Arrow |
-| Talk to NPC / Interact | E |
-
-### Game Flow
-
-1. Walk around the office environment
-2. Find NPCs and talk to them to learn about phishing
-3. Complete the email challenge when ready
-4. Identify phishing emails vs safe emails
-5. Earn points for correct decisions
-6. Progress through the game
-
-### Email Challenge
-
-When you get the email challenge:
-- You'll see a list of emails in an email client
-- Each email is either SAFE (keep it) or PHISHING (delete it)
-- Click "Keep" for safe emails or "Delete" for phishing
-- Correct decisions: +10 points
-- Wrong decisions: -10 points
-- Maximum score: 130 points
-
-Common phishing red flags to look for:
-- Suspicious sender email addresses
-- Urgent language ("Act now!", "Verify immediately!")
-- Requests for personal information or passwords
-- Mismatched links or incorrect domains
-- Poor spelling or grammar
-
----
-
-## Setup With User Accounts (Advanced)
-
-The game works offline by default. To add user registration, login, and progress saving:
-
-### Prerequisites
-- PostgreSQL installed and running (https://www.postgresql.org/download/)
-
-### Step 1: Create .env File
-
-In the `server` folder, create a `.env` file with:
-
-```
-PORT=5000
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/cybergaurd
-JWT_SECRET=your_secret_key_make_it_random
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
-RECAPTCHA_SECRET_KEY=your_key
-```
-
-### Step 2: Email Verification (Optional)
-
-1. Go to https://myaccount.google.com/apppasswords
-2. Create an App Password for Gmail
-3. Add it to `.env` as EMAIL_PASSWORD
-
-### Step 3: CAPTCHA Protection (Optional)
-
-1. Go to https://www.google.com/recaptcha/admin
-2. Create a new reCAPTCHA v2 project
-3. Add `localhost` as a domain
-4. Copy the Secret Key to `.env` as RECAPTCHA_SECRET_KEY
-
-### Step 4: Start the Server
-
-```bash
-cd server
-npm install
-node server.js
-```
-
-### Step 5: Start the Client
-
-```bash
-cd client
-npm start
-```
-
-Features with user accounts:
-- User registration and login
-- Email verification
-- Two-factor authentication (2FA)
-- Score and progress tracking
-
----
-
-## Project Structure
-
-```
-cybergaurd-academy/
-├── client/                  <- Game (React + Phaser)
-│   ├── public/              <- Game files (maps, sprites)
-│   ├── src/
-│   │   ├── components/      <- UI components
-│   │   ├── pages/           <- Login, Register, Dashboard
-│   │   ├── services/        <- API communication
-│   │   └── scenes/          <- Game scenes
-│   └── package.json
-│
-└── server/                  <- Backend (Node.js)
-    ├── routes/              <- API endpoints
-    ├── middleware/          <- Security
-    ├── utils/               <- Email service
-    └── package.json
-```
-
----
-
-## Common Commands
-
-### Run the Game
-```bash
-cd client
-npm start
-```
-
-### Run the Server
-```bash
-cd server
-npm install
-node server.js
-```
-
-### Stop the Game
-Press CTRL + C in terminal
-
-### Clear Cache
-```bash
-cd client
-rm -rf node_modules
-npm install
-npm start
-```
-
----
-
-## Troubleshooting
-
-### "npm: command not found"
-- Install Node.js from https://nodejs.org
-- Restart your terminal
-
-### Game doesn't start
-- Make sure you're in the `client` folder
-- Run `npm install` first
-- Clear browser cache (Ctrl+Shift+Delete)
-
-### "Port 3000 is already in use"
-- Close the app using that port
-- Or change the port in package.json
-
-### Emails not sending
-- Check your Gmail app password in .env
-- Verify 2FA is enabled on your Gmail
-
-### Database connection error
-- Make sure PostgreSQL is running
-- Check DATABASE_URL in .env
-
-### Still having issues?
-- Press F12 to open browser console for errors
-- Check terminal output where you ran npm start
-
----
-
-## What You'll Learn
-
-- How to spot phishing emails
-- Common phishing tactics and red flags
-- Email sender verification
-- How attackers use urgency and social pressure
-- Safe email practices
-
----
+The frontend is built with React 19 paired with Phaser 3 as the game engine, React Router for navigation, and Google reCAPTCHA for bot protection during registration. The backend runs on Node.js with Express.js, PostgreSQL for persistent data storage, JWT for stateless authentication, bcryptjs for secure password hashing, and speakeasy to handle TOTP-based two-factor authentication. Security is reinforced through Helmet.js for HTTP headers and express-rate-limit to prevent brute force attacks. The whole stack deploys cleanly: Vercel hosts the frontend while Railway.app runs the backend and PostgreSQL database.
 
 ## Features
 
-- Interactive office environment to explore
-- NPC-based learning system
-- Email classification challenges
-- Point-based scoring system
-- User accounts and progress tracking (optional)
-- 2FA for account security
-- CAPTCHA bot protection
+The game world is a fully interactive 2D office environment where you walk around, talk to NPCs, and complete objectives. Two-factor authentication is mandatory and uses time-based one-time passwords via Google Authenticator or Authy, ensuring accounts stay secure. The phishing email classification challenge presents randomized emails each session — you classify them as legitimate or phishing and earn points for correct decisions, creating a tangible learning outcome.
 
----
+Authentication is hardened with bcrypt password hashing and reCAPTCHA verification during registration. Sessions are managed through JWT tokens without server-side storage, keeping the backend stateless and scalable. Your progress is automatically saved per user, so you can pick up right where you left off, with points, completed challenges, and position in the game world all persisted to the database.
 
-## Technology Stack
+## How to Run Locally
 
-**Frontend**
-- React - User interface
-- Phaser 3 - Game engine
-- CSS - Styling
+You'll need Node.js, npm, and PostgreSQL installed on your machine. Clone the repository and navigate into the project folder. Install dependencies separately for backend and frontend by running `npm install` in both the `server` and `client` directories.
 
-**Backend**
-- Node.js - Server runtime
-- Express - Web framework
-- PostgreSQL - Database (optional)
-- JWT - Authentication
-- Nodemailer - Email sending
+In the `server` folder, create a `.env` file with your database connection details (DATABASE_URL or individual DB_HOST, DB_USER, DB_PASSWORD, DB_NAME), a strong JWT_SECRET, and your RECAPTCHA_SECRET_KEY if you want bot protection enabled. Set up the PostgreSQL database using the schema file provided in the server folder.
 
----
+Start the backend with `node server.js` (it runs on port 5000), then in a separate terminal, start the frontend with `npm start` from the `client` folder (it runs on port 3000). Your browser will open automatically to `http://localhost:3000`. That's it — you're ready to play.
 
+## Screenshots
 
-## Contributing
+Screenshots coming soon.
 
-Want to help? You can:
-- Report bugs
-- Suggest new phishing scenarios
-- Add new NPCs with different lessons
-- Improve email examples
-- Improve documentation
+## Future Improvements
 
----
+I'm planning to add multi-language support starting with Arabic, French, Chinese, and Spanish. Statistically, non-English speaking users are targeted more frequently by phishing attacks, and making this platform accessible globally could genuinely help protect people who need it most.
 
-## FAQ
+The phishing module is ready to scale. I want to build a much larger library of hyper-realistic emails and implement a difficulty system that adapts as users progress, introducing increasingly sophisticated attacks that teach them to think more critically.
 
+A SQL Injection awareness module is on my roadmap. Rather than explaining injection attacks in theory, users would interact with a simulated vulnerable login form and see firsthand how database injection works in a safe environment. It's learning through consequence without real risk.
 
-**Q: How long does it take to complete?**  
-A: About 20-30 minutes depending on how you play.
+Finally, I'd like to add a Ransomware Simulation module that shows what happens when a user actually opens a malicious attachment. A realistic fake file encryption sequence and ransom note would make this devastating real-world attack tangible rather than abstract. People understand threats they've seen.
 
-**Q: Will this make me an expert at spotting phishing?**  
-A: This covers the basics and common tactics. Real phishing can be sophisticated, so always stay cautious.
+## Author
 
+Ahmed Mohammed Khaled — BSc Computer Science (Cybersecurity) from Asia Pacific University of Technology and Innovation, Malaysia.
 
----
-
-## Support
-
-- Email: [add your email]
-- Discord: [add your Discord link]
-- GitHub Issues: [add GitHub issues link]
-
----
-
-## Ready to Play?
-
-```bash
-cd client
-npm install
-npm start
-```
-
-Have fun learning to spot phishing emails!
-
----
-
-**Last Updated**: January 2026  
-**Version**: 1.0.0
+[LinkedIn](https://linkedin.com) | [GitHub](https://github.com)
