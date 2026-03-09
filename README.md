@@ -31,18 +31,17 @@ Start the backend with `node server.js` (it runs on port 5000), then in a separa
 ## Screenshots
 
 **Login & Registration:** Screenshot of the login page with the 2FA code entry field, showing the secure authentication flow.
-
-**2FA Setup:** The QR code screen where users scan with Google Authenticator or Authy, plus the backup codes display.
-
-**Game World:** The 2D office environment with the player character walking around, showing the interactive map with NPCs visible.
+<img width="872" height="451" alt="image" src="https://github.com/user-attachments/assets/760a1891-4175-48f6-8638-e8f04dc05db4" />
 
 **NPC Dialogue:** A close-up of the dialogue box showing conversation with the HR Manager or Senior Developer, with the typewriter text effect visible.
+<img width="900" height="458" alt="image" src="https://github.com/user-attachments/assets/e79dbe1b-5a41-4826-9b4c-64b37f7dcec3" />
 
-**Email Challenge:** The email client interface showing the inbox with both safe and phishing emails, with the scoring board at the bottom.
+<img width="785" height="646" alt="image" src="https://github.com/user-attachments/assets/ef9de779-52b9-4085-bf94-cdef22e42f04" />
 
-**Whiteboard Progress:** The in-game whiteboard showing progress metrics (inbox count, safe emails, phishing emails identified).
 
-**Dashboard:** The main dashboard with the game canvas, guidelines panel, and all UI elements visible.
+<img width="839" height="385" alt="image" src="https://github.com/user-attachments/assets/9b91226f-31e3-4369-a40b-54218ce7eb05" />
+
+<img width="854" height="425" alt="image" src="https://github.com/user-attachments/assets/3e156818-e83c-44f1-b26c-ecc311759fae" />
 
 ## Future Improvements
 
