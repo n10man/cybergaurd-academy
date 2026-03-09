@@ -30,7 +30,19 @@ Start the backend with `node server.js` (it runs on port 5000), then in a separa
 
 ## Screenshots
 
-Screenshots coming soon.
+**Login & Registration:** Screenshot of the login page with the 2FA code entry field, showing the secure authentication flow.
+
+**2FA Setup:** The QR code screen where users scan with Google Authenticator or Authy, plus the backup codes display.
+
+**Game World:** The 2D office environment with the player character walking around, showing the interactive map with NPCs visible.
+
+**NPC Dialogue:** A close-up of the dialogue box showing conversation with the HR Manager or Senior Developer, with the typewriter text effect visible.
+
+**Email Challenge:** The email client interface showing the inbox with both safe and phishing emails, with the scoring board at the bottom.
+
+**Whiteboard Progress:** The in-game whiteboard showing progress metrics (inbox count, safe emails, phishing emails identified).
+
+**Dashboard:** The main dashboard with the game canvas, guidelines panel, and all UI elements visible.
 
 ## Future Improvements
 
@@ -40,7 +52,11 @@ The phishing module is ready to scale. I want to build a much larger library of 
 
 A SQL Injection awareness module is on my roadmap. Rather than explaining injection attacks in theory, users would interact with a simulated vulnerable login form and see firsthand how database injection works in a safe environment. It's learning through consequence without real risk.
 
-Finally, I'd like to add a Ransomware Simulation module that shows what happens when a user actually opens a malicious attachment. A realistic fake file encryption sequence and ransom note would make this devastating real-world attack tangible rather than abstract. People understand threats they've seen.
+I'd also like to add a Ransomware Simulation module that shows what happens when a user actually opens a malicious attachment. A realistic fake file encryption sequence and ransom note would make this devastating real-world attack tangible rather than abstract. People understand threats they've seen.
+
+Beyond these, I'm seriously considering a major architectural shift: moving from a 2D top-down perspective to a full 3D first-person immersive experience. Imagine walking through a corporate office in full 3D, seeing phishing emails pop up on your desk monitor in real-time, noticing suspicious USB devices left by attackers, and encountering social engineering scenarios where you have to make split-second decisions. This would feel less like a training module and more like a genuine workplace experience.
+
+The most exciting possibility is leveraging AI to dynamically generate phishing emails that are hyper-personalized and contextually relevant. Instead of a fixed set of 13 emails, an AI model could generate thousands of unique variations, learning from user performance to create emails that specifically target their weak points. It could adapt difficulty in real-time, introduce new attack patterns based on current real-world threats, and even generate personalized back-stories for convincing social engineering scenarios. This would make the training perpetually fresh and significantly more effective.
 
 ## Author
 
